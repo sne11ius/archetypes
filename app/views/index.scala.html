@@ -1,7 +1,26 @@
-@(message: String)
+@(archetypes: Set[Archetype])
 
-@main("Welcome to Play") {
+@main("Welcome to archetyp.es") {
 
-    @play20.welcome(message)
+  # archtypes: @archetypes.size
+
+  <table>
+    <tr>
+      <th>groupId</th>
+      <th>artifactId</th>
+      <th>version</th>
+      <th>description</th>
+      <th>repository</th>
+    </tr>
+	  @for(archetype <- archetypes) {
+	    <tr>
+	      <td>@archetype.groupId</td>
+	      <td>@archetype.artifactId</td>
+        <td>@archetype.version</td>
+        <td>@archetype.description</td>
+        <td>@archetype.repository</td>
+	    </tr>
+	  }
+  </table>
 
 }

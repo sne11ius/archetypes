@@ -7,8 +7,9 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
-  jdbc,
-  anorm,
+  "net.codingwell" %% "scala-guice" % "4.0.0-beta5",
+  "com.typesafe.play" %% "play-slick" % "0.8.1",
+  "mysql" % "mysql-connector-java" % "5.1.32",
   cache,
   ws
 )

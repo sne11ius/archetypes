@@ -2,11 +2,18 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import javax.inject.Inject
+import services.ArchetypesService
+import models.ArchetypeDao
+import play.api.db.slick.DBAction
 
-object Application extends Controller {
+class Application @Inject() (archetypesService: ArchetypesService, archetypeDao: ArchetypeDao) extends Controller {
 
-  def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+  def index = DBAction { implicit rs =>
+    val archetypes = archetypesService.loadArchetypes
+    //archetypes.foreach { a => archetypeDao.safe(a) }
+    //Ok(views.html.index(archetypesService.loadArchetypes))
+    Ok(views.html.index(archetypeDao.findAll))
   }
 
 }
