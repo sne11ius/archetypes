@@ -1,6 +1,5 @@
-package models
+package models.daos
 
-import models.Archetype
 import models.Archetype
 
 trait ArchetypeDao {

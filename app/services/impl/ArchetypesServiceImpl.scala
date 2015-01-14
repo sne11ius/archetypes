@@ -11,16 +11,19 @@ import models.Archetype
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
+import javax.inject.Inject
+import models.daos.ArchetypeDao
 
-class ArchetypesServiceImpl extends ArchetypesService {
+class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
   
-  override def loadArchetypes : Set[Archetype] = {
+  override def loadArchetypes : List[Archetype] = {
     current.configuration.getStringList("archetypes.catalogs").map(_.toList).get.flatMap { url =>
       Await.result(WS.url(url).withFollowRedirects(true).get().map { response =>
         response.xml \\ "archetype-catalog" \\ "archetypes" \\ "archetype" map { a =>
           Archetype(
+            None,
             (a \ "groupId").text,
             (a \ "artifactId").text,
             (a \ "version").text,
@@ -29,7 +32,11 @@ class ArchetypesServiceImpl extends ArchetypesService {
           )
         }
       }, 10 seconds)
-    }.distinct.toSet
+    }.distinct
+  }
+  
+  override def findAll: List[Archetype] = {
+    archetypsDao.findAll
   }
 
 }
