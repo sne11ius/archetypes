@@ -18,7 +18,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
   
-  override def loadArchetypes : List[Archetype] = {
+  override def load : List[Archetype] = {
     current.configuration.getStringList("archetypes.catalogs").map(_.toList).get.flatMap { url =>
       Await.result(WS.url(url).withFollowRedirects(true).get().map { response =>
         response.xml \\ "archetype-catalog" \\ "archetypes" \\ "archetype" map { a =>
@@ -39,4 +39,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypsDao.findAll
   }
 
+  def addAll(archetypes: List[Archetype]) = {
+    archetypes.map { archetypsDao.safe }
+  }
 }

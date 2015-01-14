@@ -2,6 +2,10 @@
 
 @main("Welcome to archetyp.es") {
 
+  @helper.form(action = routes.ArchetypesController.reimportArchetypes()) {
+     <input type="submit" class="btn btn-primary" value="Reimport archetypes">
+  }
+
   # archtypes: @archetypes.size
 
   <table>
