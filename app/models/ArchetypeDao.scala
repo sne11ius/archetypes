@@ -7,6 +7,6 @@ trait ArchetypeDao {
 
   def safe(archetype: Archetype);
   
-  def findAll: Set[Archetype]
+  def findAll: List[Archetype]
   
 }

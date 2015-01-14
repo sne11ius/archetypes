@@ -41,9 +41,9 @@ class ArchetypeDaoSlick extends ArchetypeDao {
     }
   }
 
-  def findAll: Set[Archetype] = {
+  def findAll: List[Archetype] = {
     DB withSession { implicit session =>
-      archetypes.list.toSet
+      archetypes.list.sortBy { a => a.groupId }
     }
   }
 }

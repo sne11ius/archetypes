@@ -1,4 +1,4 @@
-@(archetypes: Set[Archetype])
+@(archetypes: List[Archetype])
 
 @main("Welcome to archetyp.es") {
 
@@ -6,14 +6,16 @@
 
   <table>
     <tr>
+      <th>#</th>
       <th>groupId</th>
       <th>artifactId</th>
       <th>version</th>
       <th>description</th>
       <th>repository</th>
     </tr>
-	  @for(archetype <- archetypes) {
+	  @for((archetype, index) <- archetypes.toList.zipWithIndex) {
 	    <tr>
+	      <td>@(index + 1)</td>
 	      <td>@archetype.groupId</td>
 	      <td>@archetype.artifactId</td>
         <td>@archetype.version</td>
