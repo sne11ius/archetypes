@@ -14,4 +14,8 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
     Ok(views.html.index(archetypesService.findAll))
   }
   
+  def archetypes(groupId: Option[String]) = DBAction { implicit rs =>
+    val archetypes = archetypesService.find(groupId);
+    Ok(views.html.index(archetypes))
+  }
 }

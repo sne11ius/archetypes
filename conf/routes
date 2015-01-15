@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           @controllers.Application.index
+GET     /archetypes                 @controllers.ArchetypesController.archetypes(groupId: Option[String])
 POST    /reimportArchetypes         @controllers.ArchetypesController.reimportArchetypes
 
 # Map static resources from the /public folder to the /assets URL path

@@ -38,6 +38,10 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   override def findAll: List[Archetype] = {
     archetypsDao.findAll
   }
+  
+  override def find(groupId: Option[String]): List[Archetype] = {
+    archetypsDao.find(groupId)
+  }
 
   def addAll(archetypes: List[Archetype]) = {
     archetypes.map { archetypsDao.safe }

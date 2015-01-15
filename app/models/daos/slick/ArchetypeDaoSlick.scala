@@ -2,12 +2,11 @@ package models.daos.slick
 
 import models.Archetype
 import models.daos.ArchetypeDao
-
 import play.api.db.slick._
 import play.api.db.slick.Config.driver.simple._
 import models.daos.slick.ArchetypeSlickDB._
-
 import play.api.Play.current
+import play.api.Logger
 
 class ArchetypeDaoSlick extends ArchetypeDao {
   
@@ -29,4 +28,18 @@ class ArchetypeDaoSlick extends ArchetypeDao {
       )}
     }
   }
+  
+  def find(groupId: Option[String]): List[Archetype] = {
+    Logger.debug(s"Filter for $groupId")
+    DB withSession { implicit session =>
+      if (groupId.isEmpty) {
+        Logger.debug(s"Finding all...")
+        findAll
+      }
+      archetypes.filter { _.groupId === groupId.get }.list.map { a => Archetype(
+        a.id, a.groupId, a.artifactId, a.version, a.description, a.repository
+      )}
+    }
+  }
+  
 }
