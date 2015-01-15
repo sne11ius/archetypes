@@ -1,4 +1,3 @@
-This is your new Play application
-=================================
+# archetypes
 
-This file will be packaged with your application, when using `activator dist`.
+Have fun with maven archetypes ;)
