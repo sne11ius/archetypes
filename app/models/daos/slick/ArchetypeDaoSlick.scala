@@ -8,6 +8,8 @@ import models.daos.slick.ArchetypeSlickDB._
 import play.api.Play.current
 import play.api.Logger
 
+import org.apache.maven.artifact.versioning.ComparableVersion
+
 class ArchetypeDaoSlick extends ArchetypeDao {
   
   def safe(archetype: Archetype): Unit = {
@@ -29,17 +31,35 @@ class ArchetypeDaoSlick extends ArchetypeDao {
     }
   }
   
-  def find(groupId: Option[String]): List[Archetype] = {
-    Logger.debug(s"Filter for $groupId")
-    DB withSession { implicit session =>
-      if (groupId.isEmpty) {
-        Logger.debug(s"Finding all...")
-        findAll
+  def find(groupId: Option[String], artifactId: Option[String], version: Option[String]): List[Archetype] = {
+    // This will be slow as hell, but I cannot slick, so...
+    val archetypes = findAll.filter { a =>
+      if (groupId.isDefined) {
+        a.groupId.toLowerCase().contains(groupId.get.toLowerCase())
+      } else {
+        true
       }
-      archetypes.filter { _.groupId === groupId.get }.list.map { a => Archetype(
-        a.id, a.groupId, a.artifactId, a.version, a.description, a.repository
-      )}
+    }.filter { a =>
+      if (artifactId.isDefined) {
+        a.artifactId.toLowerCase().contains(artifactId.get.toLowerCase())
+      } else {
+        true
+      }
+    }.filter { a =>
+      if (version.isDefined && version.get != "newest") {
+        a.version.toLowerCase().contains(version.get.toLowerCase())
+      } else {
+        true
+      }
+    }
+    if (version.isDefined && version.get == "newest") {
+      archetypes.sortWith((a1, a2) => {
+        0 < new ComparableVersion(a1.version).compareTo(new ComparableVersion(a2.version))
+      }).take(1)
+    } else {
+      archetypes
     }
   }
+  
   
 }

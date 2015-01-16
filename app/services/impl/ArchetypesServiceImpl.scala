@@ -39,8 +39,8 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypsDao.findAll
   }
   
-  override def find(groupId: Option[String]): List[Archetype] = {
-    archetypsDao.find(groupId)
+  override def find(groupId: Option[String], artifactId: Option[String], version: Option[String]): List[Archetype] = {
+    archetypsDao.find(groupId, artifactId, version)
   }
 
   def addAll(archetypes: List[Archetype]) = {
