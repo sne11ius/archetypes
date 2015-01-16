@@ -44,7 +44,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypes.map { archetypsDao.safe }
   }
   
-  override def find(groupId: Option[String], artifactId: Option[String], version: Option[String]): List[Archetype] = {
+  override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
     val archetypes = archetypsDao.findAll.filter { a =>
       if (groupId.isDefined) {
@@ -55,6 +55,14 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     }.filter { a =>
       if (artifactId.isDefined) {
         a.artifactId.toLowerCase().contains(artifactId.get.toLowerCase())
+      } else {
+        true
+      }
+    }.filter { a =>
+      if (description.isDefined) {
+        description.get.split("[\\p{Punct}\\s]+").filterNot { s => s.trim().isEmpty() }.exists { s =>
+          a.description.getOrElse("").toLowerCase().contains(s.toLowerCase())
+        }
       } else {
         true
       }
