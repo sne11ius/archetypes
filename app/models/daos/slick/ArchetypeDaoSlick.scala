@@ -7,8 +7,8 @@ import play.api.db.slick.Config.driver.simple._
 import models.daos.slick.ArchetypeSlickDB._
 import play.api.Play.current
 import play.api.Logger
-
 import org.apache.maven.artifact.versioning.ComparableVersion
+import models.Archetype
 
 class ArchetypeDaoSlick extends ArchetypeDao {
   
@@ -56,7 +56,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
       archetypes.groupBy( a => (a.groupId, a.artifactId)).flatMap {
         case ((groupId, artifactId), list) => {
           list.sortWith((a1, a2) => {
-            0 < new ComparableVersion(a1.version).compareTo(new ComparableVersion(a2.version))
+            0 < a1.compareTo(a2)
           }).take(1)
         }
       }.toList
@@ -65,5 +65,6 @@ class ArchetypeDaoSlick extends ArchetypeDao {
     }
   }
   
+  implicit def archetypeToComparableVersion(a: Archetype) : ComparableVersion = new ComparableVersion(a.version)
   
 }
