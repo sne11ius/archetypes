@@ -53,9 +53,13 @@ class ArchetypeDaoSlick extends ArchetypeDao {
       }
     }
     if (version.isDefined && version.get == "newest") {
-      archetypes.sortWith((a1, a2) => {
-        0 < new ComparableVersion(a1.version).compareTo(new ComparableVersion(a2.version))
-      }).take(1)
+      archetypes.groupBy( a => (a.groupId, a.artifactId)).flatMap {
+        case ((groupId, artifactId), list) => {
+          list.sortWith((a1, a2) => {
+            0 < new ComparableVersion(a1.version).compareTo(new ComparableVersion(a2.version))
+          }).take(1)
+        }
+      }.toList
     } else {
       archetypes
     }
