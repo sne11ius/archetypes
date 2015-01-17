@@ -73,12 +73,14 @@ $(document).ready(function() {
     resetForm();
     $('#description-input').val('jee7 webapp');
     $('#newest-checkbox').attr('checked', true);
+    $("#newest-checkbox").prop("checked", true);
     updateList();
   });
   $('.example-3 a').on('click', function() {
     resetForm();
     $('#groupId-input').val('com.airhacks');
     $('#newest-checkbox').attr('checked', true);
+    $("#newest-checkbox").prop("checked", true);
     updateList();
   });
 });
