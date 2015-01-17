@@ -48,7 +48,7 @@ function updateList() {
       html += '<td class="groupId">' + data[i].groupId + '</td>';
       html += '<td class="artifactId">' + data[i].artifactId + '</td>';
       html += '<td class="version">' + data[i].version + '</td>';
-      html += '<td class="description">' + data[i].description + '</td>';
+      html += '<td class="description">' + ('undefined' === typeof data[i].description ? '' : data[i].description) + '</td>';
       html += '</tr>';
     }
     html += '</table>';
