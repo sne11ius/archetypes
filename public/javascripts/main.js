@@ -1,5 +1,9 @@
-function getVal(item) {
-  return item.value | '';
+function resetForm() {
+  $('#groupId-input').val('');
+  $('#artifactId-input').val('');
+  $('#description-input').val('');
+  $('#version-input').val('');
+  $('#newest-checkbox').attr('checked', false);
 }
 
 function makeUrl() {
@@ -38,7 +42,6 @@ function updateList() {
   $('#list-container').html('');
   var url = makeUrl();
   $.getJSON(url, function(data) {
-    console.log(data);
     var html = '<table><col width="20%"><col width="20%"><col width="10%"><col width="50%"><tr><th class="groupId">groupId</th><th class="artifactId">artifactId</th><th class="version">version</th><th class="description">description</th></tr>';
     for (var i = 0; i < data.length; ++i) {
       html + '<tr>';
@@ -59,6 +62,23 @@ $(document).ready(function() {
     updateList();
   });
   $('.form-line input').on('keyup', function() {
+    updateList();
+  });
+  $('.example-1 a').on('click', function() {
+    resetForm();
+    $('#artifactId-input').val('commons-');
+    updateList();
+  });
+  $('.example-2 a').on('click', function() {
+    resetForm();
+    $('#description-input').val('jee7 webapp');
+    $('#newest-checkbox').attr('checked', true);
+    updateList();
+  });
+  $('.example-3 a').on('click', function() {
+    resetForm();
+    $('#groupId-input').val('com.airhacks');
+    $('#newest-checkbox').attr('checked', true);
     updateList();
   });
 });
