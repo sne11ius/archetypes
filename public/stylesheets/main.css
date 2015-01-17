@@ -1,0 +1,91 @@
+/**
+  Powered by Envy Code R preview #7 @ http://damieng.com/blog/2008/05/26/envy-code-r-preview-7-coding-font-released
+  Awesome font. Thank you.
+ */
+@font-face {
+  font-family: 'EnvyCodeRWeb';
+  src: url('../fonts/envy_code_r-webfont.eot');
+  src: url('../fonts/envy_code_r-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/envy_code_r-webfont.woff') format('woff'),
+       url('../fonts/envy_code_r-webfont.ttf') format('truetype'),
+       url('../fonts/envy_code_r-webfont.svg#envy_code_rregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'EnvyCodeRWeb';
+  src: url('../fonts/envy_code_r_bold-webfont.eot');
+  src: url('../fonts/envy_code_r_bold-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/envy_code_r_bold-webfont.woff') format('woff'),
+       url('../fonts/envy_code_r_bold-webfont.ttf') format('truetype'),
+       url('../fonts/envy_code_r_bold-webfont.svg#envy_code_rbold') format('svg');
+  font-weight: bold;
+  font-style: normal;
+}
+
+* {
+	font-family: 'EnvyCodeRWeb'
+}
+
+h1 {
+	font-weight: normal;
+	text-align: center;
+}
+
+.form-container {
+	width: 320px;
+	background-color: #cdcdcd;
+	padding: 5px;
+	border-radius: 5px;
+	margin-bottom: 10px;
+}
+
+.form-line {
+	margin: 5px;
+}
+
+.form-line + .form-line {
+	margin-top: 7px;
+}
+
+.form-line label {
+	width: 115px;
+	display: inline-block;
+	text-align: right;
+}
+
+.form-line input {
+	width: 170px;
+	border: 1px solid #cdcdcd;
+	border-radius: 3px;
+}
+
+.checkbox-line label {
+  text-align: left;
+  position: relative;
+  left: -6px;
+}
+
+.checkbox-line [type="checkbox"] {
+	width: 20px;
+	margin-left: 100px;
+	position: relative;
+  top: 2px;
+}
+
+#help-container {
+	width: 500px;
+}
+
+#help-container li {
+	text-align: left;
+}
+
+#list-container {
+	width: 90%;
+}
+
+th {
+	text-align: left;
+}

@@ -1,7 +1,44 @@
 @(archetypes: List[Archetype])
 
-@main("Welcome to archetyp.es") {
+@main("wasis.nu/mit/archetypes?") {
 
+  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
+  <center>
+	  <div class="form-container">
+	    <div class="form-line">
+	      <label for="groupId-input">groupId:</label>
+	      <input id="groupId-input" type="text">
+	    </div>
+	    <div class="form-line">
+	      <label for="artifactId-input">artifactId:</label>
+	      <input id="artifactId-input"" type="text">
+	    </div>
+	    <div class="form-line">
+	      <label for="version-input">version:</label>
+	      <input id="version-input" type="text">
+	      <div class="checkbox-line">
+		      <input id="newest-checkbox" type="checkbox">
+		      <label for="newest-checkbox">newest</label>
+	      </div>
+	    </div>
+	    <div class="form-line">
+	      <label for="description-input">description:</label>
+	      <input id="description-input" type="text">
+	    </div>
+	  </div>
+	  <div id="help-container">
+	   This is a search engine for maven archetypes. Try some of the examples:
+	   <ul>
+	   	<li class="example">archetypes with <a href="">artifactId like "commons-"</a></li>
+	   	<li class="example">archetypes with a <a href="">description containing "webapp", but only the newest version respectively</a></li>
+	   	<li class="example">newest versions archetypes with <a href="">groupId "com.airhacks"</a></li>
+	   </ul>
+	  </div>
+	  <div id="list-container">
+	  </div>
+  </center>
+
+  @*
   @helper.form(action = routes.ArchetypesController.reimportArchetypes()) {
      <input type="submit" class="btn btn-primary" value="Reimport archetypes">
   }
@@ -28,5 +65,5 @@
 	    </tr>
 	  }
   </table>
-
+  *@
 }
