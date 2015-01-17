@@ -8,6 +8,10 @@ import play.api.db.slick.DBAction
 
 class Application @Inject() (archetypesService: ArchetypesService) extends Controller {
 
+  def untrail(path: String) = Action {
+    Redirect("/" + path)
+  }
+  
   def index = DBAction { implicit rs =>
     Ok(views.html.index(archetypesService.findAll))
   }

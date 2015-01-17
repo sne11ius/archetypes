@@ -23,6 +23,15 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
     Ok(views.html.index(archetypes))
   }
   
+  def archetypeDetails(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+    val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
+    if (1 == archetype.size) {
+      Ok(views.html.archetypeDetails(archetype.head))
+    } else {
+      NotFound
+    }
+  }
+  
   implicit val archetypeWrites = Json.writes[Archetype]
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>

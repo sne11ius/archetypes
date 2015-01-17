@@ -1,0 +1,30 @@
+@(archetype: Archetype)
+
+@main("wasis.nu/mit/archetypes?") {
+
+  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
+  <center>
+    Details for
+    <div class="details-overview-container">
+      <div class="line">
+        <label for="groupId">groupId:</label>
+        <span id="groupId">@archetype.groupId</span>
+       </div>
+      <div class="line">
+        <label for="artifactId">artifactId:</label>
+        <span id="artifactId">@archetype.artifactId</span>
+       </div>
+      <div class="line">
+        <label for="version">version:</label>
+        <span id="version">@archetype.version</span>
+       </div>
+    </div>
+    Command:
+    <div class="details-overview-container" style="width: 90%">
+      mvn archetype:generate -DgroupId=com.example.app -DartifactId=example-app -Dversion=1.0-SNAPSHOT -Dpackage=com.example.app -DarchetypeGroupId=@archetype.groupId -DarchetypeArtifactId=@archetype.artifactId -DarchetypeVersionId=@archetype.version
+    </div>
+    POM:
+    <div class="details-overview-container" style="width: 90%">
+    </div>
+  </center>
+}

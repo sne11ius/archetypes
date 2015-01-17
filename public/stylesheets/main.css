@@ -33,7 +33,7 @@ h1 {
 	text-align: center;
 }
 
-.form-container {
+.form-container, .details-overview-container {
 	width: 320px;
 	background-color: #cdcdcd;
 	padding: 5px;
@@ -88,4 +88,19 @@ h1 {
 
 th {
 	text-align: left;
+}
+
+.details-overview-container {
+  width: 400px;
+  text-align: left;
+}
+
+.details-overview-container label {
+	width: 123px;
+	text-align: right;
+	display: inline-block;
+	margin-right: 20px;
+}
+
+.details-overview-container span {
 }
