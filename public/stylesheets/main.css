@@ -74,6 +74,10 @@ h1 {
   top: 2px;
 }
 
+.line {
+  display: flex;
+}
+
 #help-container {
 	width: 500px;
 }
@@ -84,10 +88,15 @@ h1 {
 
 #list-container {
 	width: 90%;
+	/*border-collapse: collapse;*/
 }
 
 th {
 	text-align: left;
+}
+
+#list-container tr + tr td {
+	border-top: 1px solid #cdcdcd;
 }
 
 .details-overview-container {
@@ -194,7 +203,7 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
   border-radius: 5px;
 }
 
-#blog-hint a, #blog-hint a:hover {
+#blog-hint a, #blog-hint a:hover, #about-hint a, #about-hint a:hover {
 	color: black;
 	text-decoration: none;
 }
@@ -209,4 +218,63 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 	width: 5px;
 	height: 7px;
 	background-color: black;
+}
+
+#about-hint {
+	position: fixed;
+  top: -5px;
+  right: -5px;
+  padding: 5px;
+  padding-right: 10px;
+  padding-top: 10px;
+  background-color: #cdcdcd;
+  border-radius: 5px;
+}
+
+#about-hint a:hover:after {
+  content: ' ';
+  position: fixed;
+  display: block;
+  border-radius: 2px;
+  right: 47px;
+  top: 13px;
+  width: 5px;
+  height: 7px;
+  background-color: black;
+}
+
+#about {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0, 0.7);
+  z-index: 1;
+}
+
+#about div {
+	background-color: white;
+	width: 70%;
+	padding: 10px;
+	border-radius: 3px;
+	position: absolute;
+	left: 15%;
+	top: 20%;
+  box-shadow: 0px 0px 60px #000000;
+}
+
+#about code {
+	font-family: 'Courier New', Arial;
+}
+
+#about .small {
+	font-size: 11px;
+  text-align: right;
+}
+
+#about .small + .small {
+	position: relative;
+	top: 14px;
 }

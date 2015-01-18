@@ -85,3 +85,12 @@ $(document).ready(function() {
     updateList();
   });
 });
+
+$(document).ready(function() {
+  $('#about').on('click', function() {
+    $(this).hide();
+  });
+  $('#about-hint').on('click', function() {
+    $('#about').show();
+  });
+});
