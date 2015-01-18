@@ -6,10 +6,11 @@ function loadMetaData(groupId, artifactId, version) {
       var fileUrl = '/rest/archetypes/' + groupId + '/' + artifactId + '/' + version + '/files' + file
       //alert(fileUrl)
       $.get(fileUrl, function(data) {
-        $('#file-content').html('<pre>' + data + '</pre>');
+        $('#file-content').html('<pre class="prettyprint linenums">' + data + '</pre>');
+        prettyPrint();
       });
-      //alert(file);
     });
     $('#wait-hint').hide();
+    $('#details').show();
   });
 }
