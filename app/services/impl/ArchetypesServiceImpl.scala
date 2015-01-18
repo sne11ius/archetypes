@@ -57,6 +57,8 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
+    val allArchetypes = archetypsDao.findAll
+    //Logger.debug(s"# archetypes: ${allArchetypes.size}")
     val archetypes = archetypsDao.findAll.filter { a =>
       if (groupId.isDefined) {
         a.groupId.toLowerCase().contains(groupId.get.toLowerCase())
@@ -97,10 +99,6 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   
   implicit def archetypeToComparableVersion(a: Archetype) : ComparableVersion = new ComparableVersion(a.version)
   
-  private def downloadDependency(archetype: Archetype) = {
-    0 == s"mvn dependency:get -DgroupId=${archetype.groupId} -DartifactId=${archetype.artifactId} -Dversion=${archetype.version} -Dtransitive=false -U".!
-  }
-  
   private def buildFilename(prefix: String, archetype: Archetype): String = {
     List(
       prefix,
@@ -110,25 +108,33 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     ).mkString(File.separator)
   }
   
+  private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String) = {
+    Logger.debug(s"Creating $baseDir")
+    val process = Process((new java.lang.ProcessBuilder(
+      "mvn",
+      "archetype:generate",
+        "-DinteractiveMode=false",
+        s"-DarchetypeGroupId=${archetype.groupId}",
+        s"-DarchetypeArtifactId=${archetype.artifactId}",
+        s"-DarchetypeVersion=${archetype.version}",
+        s"-DgroupId=$groupId",
+        s"-DartifactId=$artifactId"
+    )) directory new File(baseDir))
+    if (!(new File(baseDir).mkdirs())) {
+      Logger.error(s"Cannot mkdir: $baseDir")
+    }
+    Logger.debug(s"Generating: $process")
+    0 == process.!
+  }
+  
   override def loadArchetypeContent(archetype: Archetype): Option[ArchetypeContent] = {
-    if (!downloadDependency(archetype)) {
+    val baseDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
+    Logger.debug(s"baseDir: $baseDir")
+    if (!archetypeGenerate(archetype, "com.example", "example-app", baseDir)) {
+      Logger.debug("Cannot archetypeGenerate D:")
       None
     } else {
-      try {
-        val filename = buildFilename(current.configuration.getString("localMavenRepo").get, archetype) + File.separator + archetype.artifactId + "-" + archetype.version + ".jar"
-        val targetDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
-        Logger.debug(s"Extracting from $filename")
-        Logger.debug(s"To $targetDir")
-        ZipUtil.unzip(filename, targetDir)
-        Logger.debug("Done")
-        Some(ArchetypeContent(archetype, targetDir))
-      } catch {
-        case e: Exception => {
-          Logger.error("Cannot load archetype: " + e.getMessage)
-          e.printStackTrace()
-          None
-        }
-      }
+      Some(ArchetypeContent(archetype, baseDir + "/example-app"))
     }
   }
 }

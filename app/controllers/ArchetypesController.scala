@@ -35,6 +35,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
       //val archetypeContent = archetypesService.loadArchetypeContent(archetype.head)
       Ok(views.html.archetypeDetails(archetype.head))
     } else {
+      Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
     }
   }
@@ -70,35 +71,41 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
         NotFound
       } else {
         var dir = Form("dir" -> text).bindFromRequest.get
-        if (dir.charAt(dir.length()-1) == '\\') {
-            dir = dir.substring(0, dir.length()-1) + "/";
-        } else if (dir.charAt(dir.length()-1) != '/') {
-            dir += "/";
-        }
-        dir = java.net.URLDecoder.decode(dir, "UTF-8");
-        val baseDir = new File(archetype.localDir.get, "archetype-resources" + dir)
-        Logger.debug("browsing: " + dir)
-        if (baseDir.exists()) {
-          val files = baseDir.list
-          Arrays.sort(files, String.CASE_INSENSITIVE_ORDER)
-          var result = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
-          for (file <- files) {
-            if (new File(baseDir, file).isDirectory()) {
-              result += "<li class=\"directory collapsed\"><a href=\"#\" rel=\"" + dir + file + "/\">" + file + "</a></li>"
-            }
-          }
-          for (file <- files) {
-            if (!new File(baseDir, file).isDirectory()) {
-              val dotIndex = file.lastIndexOf('.')
-              val ext =  if (dotIndex > 0) file.substring(dotIndex + 1) else ""
-              result += "<li class=\"file ext_" + ext + "\"><a href=\"#\" rel=\"" + dir + file + "\">" + file + "</a></li>"
-            }
-          }
-          result += "</ul"
-          // Logger.debug(s"Result: $result")
-          Ok(result)
-        } else {
+        if (dir.contains("..")) {
+          Logger.error(s"Tried to browse relativa parent dir: $dir");
           NotFound
+        } else {
+          if (dir.charAt(dir.length()-1) == '\\') {
+              dir = dir.substring(0, dir.length()-1) + "/";
+          } else if (dir.charAt(dir.length()-1) != '/') {
+              dir += "/";
+          }
+          dir = java.net.URLDecoder.decode(dir, "UTF-8");
+          val baseDir = new File(archetype.localDir.get, dir)
+          Logger.debug("browsing: " + dir)
+          Logger.debug("mapped to: " + baseDir)
+          if (baseDir.exists()) {
+            val files = baseDir.list
+            Arrays.sort(files, String.CASE_INSENSITIVE_ORDER)
+            var result = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
+            for (file <- files) {
+              if (new File(baseDir, file).isDirectory()) {
+                result += "<li class=\"directory collapsed\"><a href=\"#\" rel=\"" + dir + file + "/\">" + file + "</a></li>"
+              }
+            }
+            for (file <- files) {
+              if (!new File(baseDir, file).isDirectory()) {
+                val dotIndex = file.lastIndexOf('.')
+                val ext =  if (dotIndex > 0) file.substring(dotIndex + 1) else ""
+                result += "<li class=\"file ext_" + ext + "\"><a href=\"#\" rel=\"" + dir + file + "\">" + file + "</a></li>"
+              }
+            }
+            result += "</ul"
+            // Logger.debug(s"Result: $result")
+            Ok(result)
+          } else {
+            NotFound
+          }
         }
       }
     } else {
@@ -107,19 +114,23 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
   }
   
   def getFile(groupId: String, artifactId: String, version: String, file: String) = DBAction { implicit rs =>
-    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
-    if (!archetypes.isEmpty) {
-      val archetype = archetypes.head
-      if (archetype.localDir.isEmpty) {
-        NotFound
-      } else {
-        val downloadFile = new File(archetype.localDir.get, "archetype-resources/" + file)
-        Logger.debug("Downloading: " + downloadFile.toString())
-        Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
-        //NotFound
-      }
-    } else {
+    if (file.contains("..")) {
+      Logger.error(s"Tried to browse relativa parent dir: $file");
       NotFound
+    } else {
+      val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+      if (!archetypes.isEmpty) {
+        val archetype = archetypes.head
+        if (archetype.localDir.isEmpty) {
+          NotFound
+        } else {
+          val downloadFile = new File(archetype.localDir.get, file)
+          Logger.debug("Downloading: " + downloadFile.toString())
+          Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
+        }
+      } else {
+        NotFound
+      }
     }
   }
   
