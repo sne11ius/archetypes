@@ -4,7 +4,7 @@ import models.Archetype
 
 trait ArchetypeDao {
 
-  def safe(archetype: Archetype)
+  def safe(archetype: Archetype): Unit
   def findAll: List[Archetype]
   
 }

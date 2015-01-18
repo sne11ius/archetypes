@@ -14,12 +14,18 @@ import scala.concurrent.Await
 import javax.inject.Inject
 import models.daos.ArchetypeDao
 import org.apache.maven.artifact.versioning.ComparableVersion
+import scala.sys.process._
+import java.io.File
+import java.io.FileInputStream
+import org.apache.commons.io.IOUtils
+import models.ArchetypeContent
+import util.ZipUtil
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
   
-  override def load : List[Archetype] = {
+  override def load: List[Archetype] = {
     current.configuration.getStringList("archetypes.catalogs").map(_.toList).get.flatMap { url =>
       Await.result(WS.url(url).withFollowRedirects(true).get().map { response =>
         response.xml \\ "archetype-catalog" \\ "archetypes" \\ "archetype" map { a =>
@@ -29,7 +35,8 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
             (a \ "artifactId").text,
             (a \ "version").text,
             (a \ "description").textOption,
-            (a \ "repository").textOption
+            (a \ "repository").textOption,
+            None
           )
         }
       }, 10 seconds)
@@ -42,6 +49,10 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
 
   def addAll(archetypes: List[Archetype]) = {
     archetypes.map { archetypsDao.safe }
+  }
+  
+  def safe(archetype: Archetype): Unit = {
+    archetypsDao.safe(archetype)
   }
   
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
@@ -76,9 +87,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     if (version.isDefined && version.get == "newest") {
       archetypes.groupBy( a => (a.groupId, a.artifactId)).flatMap {
         case ((groupId, artifactId), list) => {
-          list.sortWith((a1, a2) => {
-            0 < a1.compareTo(a2)
-          }).take(1)
+          list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
         }
       }.toList
     } else {
@@ -87,4 +96,39 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   }
   
   implicit def archetypeToComparableVersion(a: Archetype) : ComparableVersion = new ComparableVersion(a.version)
+  
+  private def downloadDependency(archetype: Archetype) = {
+    0 == s"mvn dependency:get -DgroupId=${archetype.groupId} -DartifactId=${archetype.artifactId} -Dversion=${archetype.version} -Dtransitive=false -U".!
+  }
+  
+  private def buildFilename(prefix: String, archetype: Archetype): String = {
+    List(
+      prefix,
+      archetype.groupId.replace(".", File.separator),
+      archetype.artifactId,
+      archetype.version
+    ).mkString(File.separator)
+  }
+  
+  override def loadArchetypeContent(archetype: Archetype): Option[ArchetypeContent] = {
+    if (!downloadDependency(archetype)) {
+      None
+    } else {
+      try {
+        val filename = buildFilename(current.configuration.getString("localMavenRepo").get, archetype) + File.separator + archetype.artifactId + "-" + archetype.version + ".jar"
+        val targetDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
+        Logger.debug(s"Extracting from $filename")
+        Logger.debug(s"To $targetDir")
+        ZipUtil.unzip(filename, targetDir)
+        Logger.debug("Done")
+        Some(ArchetypeContent(archetype, targetDir))
+      } catch {
+        case e: Exception => {
+          Logger.error("Cannot load archetype: " + e.getMessage)
+          e.printStackTrace()
+          None
+        }
+      }
+    }
+  }
 }

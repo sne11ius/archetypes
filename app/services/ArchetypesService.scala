@@ -1,8 +1,8 @@
 package services
 
 
-import models.Archetype;
 import models.Archetype
+import models.ArchetypeContent
 
 trait ArchetypesService {
   
@@ -10,5 +10,8 @@ trait ArchetypesService {
   def findAll: List[Archetype]
   def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype]
   def addAll(archetypes: List[Archetype])
+  def safe(newArchetype: Archetype): Unit
+  
+  def loadArchetypeContent(archetype: Archetype): Option[ArchetypeContent]
   
 }

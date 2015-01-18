@@ -9,6 +9,10 @@ import services.ArchetypesService
 import play.api.db.slick.DBAction
 import play.api.libs.json.Json
 import models.Archetype
+import play.api.data._
+import play.api.data.Forms._
+import java.io.File
+import java.util.Arrays
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService) extends Controller {
   
@@ -26,16 +30,105 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
   def archetypeDetails(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
     val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
     if (1 == archetype.size) {
+      //val archetypeContent = archetypesService.loadArchetypeContent(archetype.head)
       Ok(views.html.archetypeDetails(archetype.head))
     } else {
       NotFound
     }
   }
   
-  implicit val archetypeWrites = Json.writes[Archetype]
+  implicit object ArchetypeFormat extends Format[Archetype] {
+    def reads(json: JsValue): JsResult[Archetype] = JsSuccess(Archetype(
+      (json \ "id").asOpt[Long],
+      (json \ "groupId").as[String],
+      (json \ "artifactId").as[String],
+      (json \ "version").as[String],
+      (json \ "description").asOpt[String],
+      (json \ "repository").asOpt[String],
+      (json \ "localDir").asOpt[String]
+    ))
+    def writes(a: Archetype): JsValue = JsObject(List(
+      "groupId" -> JsString(a.groupId),
+      "artifactId" -> JsString(a.artifactId),
+      "version" -> JsString(a.version),
+      "description" -> JsString(a.description.getOrElse("")),
+      "repository" -> JsString(a.repository.getOrElse(""))
+    ))
+  }
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
     Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description)))
   }
   
+  def browse(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+    if (!archetypes.isEmpty) {
+      val archetype = archetypes.head
+      if (archetype.localDir.isEmpty) {
+        NotFound
+      } else {
+        var dir = Form("dir" -> text).bindFromRequest.get
+        if (dir.charAt(dir.length()-1) == '\\') {
+            dir = dir.substring(0, dir.length()-1) + "/";
+        } else if (dir.charAt(dir.length()-1) != '/') {
+            dir += "/";
+        }
+        dir = java.net.URLDecoder.decode(dir, "UTF-8");
+        val baseDir = new File(archetype.localDir.get, dir)
+        Logger.debug("browsing: " + dir)
+        if (baseDir.exists()) {
+          val files = baseDir.list
+          Arrays.sort(files, String.CASE_INSENSITIVE_ORDER)
+          var result = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
+          for (file <- files) {
+            if (new File(baseDir, file).isDirectory()) {
+              result += "<li class=\"directory collapsed\"><a href=\"#\" rel=\"" + dir + file + "/\">" + file + "</a></li>"
+            }
+          }
+          for (file <- files) {
+            if (!new File(baseDir, file).isDirectory()) {
+              val dotIndex = file.lastIndexOf('.')
+              val ext =  if (dotIndex > 0) file.substring(dotIndex + 1) else ""
+              result += "<li class=\"file ext_" + ext + "\"><a href=\"#\" rel=\"" + dir + file + "\">" + file + "</a></li>"
+            }
+          }
+          result += "</ul"
+          Logger.debug(s"Result: $result")
+          Ok(result)
+        } else {
+          NotFound
+        }
+      }
+    } else {
+      NotFound
+    }
+    //Logger.debug("browsing: " + dir)
+//    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+//    if (archetypes.isEmpty) {
+//      NotFound
+//    }
+//    Ok("<ul class=\"jqueryFileTree\" style=\"display: none;\"><li class=\"directory collapsed\"><a href=\"#\" rel=\"/test/\">test</a></li><li class=\"file ext_java\"><a href=\"#\">test.java</a></li></ul>")
+    //NotFound
+  }
+  
+  def loadMetaData(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+    Logger.debug(s"Loading for $groupId, $artifactId, $version")
+    val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None).head;
+    if (archetype.localDir.isDefined) {
+      Logger.debug("Metadata already generated...")
+      NoContent
+    } else {
+      Logger.debug("Generating metadata...")
+      val archetypeContent = archetypesService.loadArchetypeContent(archetype)
+      if (archetypeContent.isDefined) {
+        //archetype.localDir = archetypeContent.get.contentBasePath
+        val newArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(archetypeContent.get.contentBasePath))
+        archetypesService.safe(newArchetype)
+        Logger.debug("done...")
+        NoContent
+      } else {
+        NotFound
+      }
+    }
+  }
 }

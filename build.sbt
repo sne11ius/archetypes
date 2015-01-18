@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "0.8.1",
   "mysql" % "mysql-connector-java" % "5.1.32",
   "org.apache.maven" % "maven-artifact" % "3.2.5",
+  "commons-io" % "commons-io" % "2.4",
   cache,
   ws
 )
