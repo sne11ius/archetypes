@@ -182,3 +182,31 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 .prettyprint .linenums {
   padding-left: 20px;
 }
+
+#blog-hint {
+  position: fixed;
+  top: -5px;
+  left: -5px;
+  padding: 5px;
+  padding-left: 10px;
+  padding-top: 10px;
+  background-color: #cdcdcd;
+  border-radius: 5px;
+}
+
+#blog-hint a, #blog-hint a:hover {
+	color: black;
+	text-decoration: none;
+}
+
+#blog-hint a:hover:after {
+	content: ' ';
+	position: fixed;
+	display: block;
+	border-radius: 2px;
+	left: 46px;
+	top: 13px;
+	width: 5px;
+	height: 7px;
+	background-color: black;
+}
