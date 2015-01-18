@@ -19,7 +19,6 @@ import java.io.File
 import java.io.FileInputStream
 import org.apache.commons.io.IOUtils
 import models.ArchetypeContent
-import util.ZipUtil
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
