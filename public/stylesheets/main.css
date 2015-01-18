@@ -95,6 +95,10 @@ th {
 	text-align: left;
 }
 
+#list-container td {
+  vertical-align: top;
+}
+
 #list-container tr + tr td {
 	border-top: 1px solid #cdcdcd;
 }
