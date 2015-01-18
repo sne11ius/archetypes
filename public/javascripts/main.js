@@ -54,6 +54,10 @@ function updateList() {
 }
 
 $(document).ready(function() {
+  updateList();
+});
+
+$(document).ready(function() {
   $('#newest-checkbox').on('click', function() {
     $("#version-input").prop('disabled', $(this).is(':checked'));
     updateList();
