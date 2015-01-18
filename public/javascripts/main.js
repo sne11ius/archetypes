@@ -31,11 +31,7 @@ function makeUrl() {
     queries.push(i + '=' + map[i]); 
   }
   var queryString = '?' + queries.join('&')
-  if (1 == queryString.length) {
-    return '';
-  } else {
-    return 'archetypes/rest/archetypes' + queryString;
-  }
+  return 'archetypes/rest/archetypes' + (1 == queryString.length ? '' : queryString);
 }
 
 function updateList() {
