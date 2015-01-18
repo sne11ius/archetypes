@@ -20,7 +20,10 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
   
   def reimportArchetypes = DBAction { implicit rs =>
     var newArchetypes = archetypesService.load
+    Logger.debug(s"${newArchetypes.size} archetypes loaded.")
+    Logger.debug("Adding to database...")
     archetypesService.addAll(newArchetypes)
+    Logger.debug("...done")
     Ok(views.html.index(archetypesService.findAll))
   }
   

@@ -57,7 +57,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
     val allArchetypes = archetypsDao.findAll
-    //Logger.debug(s"# archetypes: ${allArchetypes.size}")
+    Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
     val archetypes = archetypsDao.findAll.filter { a =>
       if (groupId.isDefined) {
         a.groupId.toLowerCase().contains(groupId.get.toLowerCase())
@@ -85,15 +85,18 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         true
       }
     }
-    if (version.isDefined && version.get == "newest") {
-      archetypes.groupBy( a => (a.groupId, a.artifactId)).flatMap {
-        case ((groupId, artifactId), list) => {
-          list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
-        }
-      }.toList
-    } else {
-      archetypes
-    }
+    val result = 
+      if (version.isDefined && version.get == "newest") {
+        archetypes.groupBy( a => (a.groupId, a.artifactId)).flatMap {
+          case ((groupId, artifactId), list) => {
+            list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
+          }
+        }.toList
+      } else {
+        archetypes
+      }
+    Logger.debug(s"Total # archetypes after filter: ${result.size}")
+    result
   }
   
   implicit def archetypeToComparableVersion(a: Archetype) : ComparableVersion = new ComparableVersion(a.version)
