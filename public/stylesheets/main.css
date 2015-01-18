@@ -137,6 +137,7 @@ th {
 #file-content pre {
 	text-align: left;
 	font-size: 13px;
+  margin-left: 20px;
 }
 /* Pretty printing styles. Used with prettify.js. */
 
