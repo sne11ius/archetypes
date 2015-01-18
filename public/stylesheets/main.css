@@ -106,3 +106,26 @@ th {
   display: inline-block;
 	width: 245px;
 }
+
+#browser-container {
+	width: 90%;
+}
+
+#file-browser {
+  display: inline-block;
+  vertical-align: top;
+  width: 30%;
+  overflow: auto;
+}
+
+#file-content {
+  width: 67%;
+	display: inline-block;
+  overflow: auto;
+}
+
+#file-content pre {
+	text-align: left;
+	font-size: 13px;
+}
+

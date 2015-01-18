@@ -10,6 +10,7 @@ GET     /archetypes/:groupId/:artifactId/:version                   @controllers
 GET     /rest/archetypes                                            @controllers.ArchetypesController.restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String])
 GET     /rest/archetypes/:groupId/:artifactId/:version/loadMetaData @controllers.ArchetypesController.loadMetaData(groupId: String, artifactId: String, version: String)
 POST    /rest/archetypes/:groupId/:artifactId/:version/browse       @controllers.ArchetypesController.browse(groupId: String, artifactId: String, version: String)
+GET     /rest/archetypes/:groupId/:artifactId/:version/files/*file  @controllers.ArchetypesController.getFile(groupId: String, artifactId: String, version: String, file: String)
 POST    /reimportArchetypes                                         @controllers.ArchetypesController.reimportArchetypes
 
 # Map static resources from the /public folder to the /assets URL path

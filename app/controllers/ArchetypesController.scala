@@ -13,6 +13,8 @@ import play.api.data._
 import play.api.data.Forms._
 import java.io.File
 import java.util.Arrays
+import org.apache.commons.io.IOUtils
+import java.io.FileInputStream
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService) extends Controller {
   
@@ -74,7 +76,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
             dir += "/";
         }
         dir = java.net.URLDecoder.decode(dir, "UTF-8");
-        val baseDir = new File(archetype.localDir.get, dir)
+        val baseDir = new File(archetype.localDir.get, "archetype-resources" + dir)
         Logger.debug("browsing: " + dir)
         if (baseDir.exists()) {
           val files = baseDir.list
@@ -93,7 +95,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
             }
           }
           result += "</ul"
-          Logger.debug(s"Result: $result")
+          // Logger.debug(s"Result: $result")
           Ok(result)
         } else {
           NotFound
@@ -102,13 +104,23 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
     } else {
       NotFound
     }
-    //Logger.debug("browsing: " + dir)
-//    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
-//    if (archetypes.isEmpty) {
-//      NotFound
-//    }
-//    Ok("<ul class=\"jqueryFileTree\" style=\"display: none;\"><li class=\"directory collapsed\"><a href=\"#\" rel=\"/test/\">test</a></li><li class=\"file ext_java\"><a href=\"#\">test.java</a></li></ul>")
-    //NotFound
+  }
+  
+  def getFile(groupId: String, artifactId: String, version: String, file: String) = DBAction { implicit rs =>
+    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+    if (!archetypes.isEmpty) {
+      val archetype = archetypes.head
+      if (archetype.localDir.isEmpty) {
+        NotFound
+      } else {
+        val downloadFile = new File(archetype.localDir.get, "archetype-resources/" + file)
+        Logger.debug("Downloading: " + downloadFile.toString())
+        Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
+        //NotFound
+      }
+    } else {
+      NotFound
+    }
   }
   
   def loadMetaData(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
@@ -121,7 +133,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
       Logger.debug("Generating metadata...")
       val archetypeContent = archetypesService.loadArchetypeContent(archetype)
       if (archetypeContent.isDefined) {
-        //archetype.localDir = archetypeContent.get.contentBasePath
         val newArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(archetypeContent.get.contentBasePath))
         archetypesService.safe(newArchetype)
         Logger.debug("done...")
