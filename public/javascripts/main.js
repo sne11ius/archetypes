@@ -34,18 +34,18 @@ function makeUrl() {
   if (1 == queryString.length) {
     return '';
   } else {
-    return './rest/archetypes' + queryString;
+    return 'archetypes/rest/archetypes' + queryString;
   }
 }
 
 function updateList() {
-  $('#list-container').html('<img src="/assets/images/ajax-loader.gif" width="70px" style="margin: 15px"><br>');
+  $('#list-container').html('<img src="archetypes/assets/images/ajax-loader.gif" width="70px" style="margin: 15px"><br>');
   var url = makeUrl();
   $.getJSON(url, function(data) {
     var html = '<table><col width="5%"><col width="15%"><col width="20%"><col width="10%"><col width="50%"><tr><th class="details"></th><th class="groupId">groupId</th><th class="artifactId">artifactId</th><th class="version">version</th><th class="description">description</th></tr>';
     for (var i = 0; i < data.length; ++i) {
       html + '<tr>';
-      html += '<td class="details"><a href="/archetypes/' + data[i].groupId + '/' + data[i].artifactId + '/' + data[i].version + '">details</a></td>';
+      html += '<td class="details"><a href="archetypes/details/' + data[i].groupId + '/' + data[i].artifactId + '/' + data[i].version + '">details</a></td>';
       html += '<td class="groupId">' + data[i].groupId + '</td>';
       html += '<td class="artifactId">' + data[i].artifactId + '</td>';
       html += '<td class="version">' + data[i].version + '</td>';
