@@ -39,7 +39,7 @@ function makeUrl() {
 }
 
 function updateList() {
-  $('#list-container').html('');
+  $('#list-container').html('<img src="/assets/images/ajax-loader.gif" width="70px" style="margin: 15px"><br>');
   var url = makeUrl();
   $.getJSON(url, function(data) {
     var html = '<table><col width="5%"><col width="15%"><col width="20%"><col width="10%"><col width="50%"><tr><th class="details"></th><th class="groupId">groupId</th><th class="artifactId">artifactId</th><th class="version">version</th><th class="description">description</th></tr>';
