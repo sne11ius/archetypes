@@ -15,9 +15,11 @@ import java.io.File
 import java.util.Arrays
 import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
+import views.forms.search.ArchetypeSearch._
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService) extends Controller {
   
+  /*
   def reimportArchetypes = DBAction { implicit rs =>
     var newArchetypes = archetypesService.load
     Logger.debug(s"${newArchetypes.size} archetypes loaded.")
@@ -31,12 +33,13 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService) exte
     val archetypes = archetypesService.find(groupId, artifactId, version, description)
     Ok(views.html.index(archetypes))
   }
+  */
   
-  def archetypeDetails(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String]) = DBAction { implicit rs =>
+    val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription))
     val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
     if (1 == archetype.size) {
-      //val archetypeContent = archetypesService.loadArchetypeContent(archetype.head)
-      Ok(views.html.archetypeDetails(archetype.head))
+      Ok(views.html.archetypeDetails(archetype.head, searchData))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound

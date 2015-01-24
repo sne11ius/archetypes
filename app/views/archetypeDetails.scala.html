@@ -1,10 +1,20 @@
-@(archetype: Archetype)
+@import views.forms.search.ArchetypeSearch._
+
+@(archetype: Archetype, searchData: Option[SearchData])
 
 @main("wasis.nu/mit/archetypes?") {
 
   <h1>wasis.nu/mit/<wbr>archetypes?</h1>
   <center>
-    <a href="/mit/archetypes">Back to search</a><br>
+    @searchData match {
+      case None => {
+        <a href="@routes.Application.index">Back to search</a>
+      }
+      case Some(searchData) => {
+        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description">Back to search</a>
+      }
+    }
+    <br>
     Details for
     <div class="details-overview-container">
       <div class="line">

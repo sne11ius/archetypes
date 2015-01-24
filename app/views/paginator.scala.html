@@ -1,0 +1,24 @@
+@import views.forms.search.ArchetypeSearch._
+
+@(paginationInfo: PaginationInfo, searchData: SearchData)
+
+<div class="paginator">
+  @if(0 != paginationInfo.start) {
+    <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start - paginationInfo.numItems}&numItems=@paginationInfo.numItems">&lt;</a>
+  }
+  <span class="pages">
+    @for(currentIndex <- 0 until paginationInfo.numPages) {
+      @if(currentIndex * paginationInfo.numItems == paginationInfo.start) {
+        <span class="current">@(currentIndex + 1)</span>
+      } else {
+        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{currentIndex * paginationInfo.numItems}&numItems=@paginationInfo.numItems">@(currentIndex + 1)</a>
+      }
+      @if(currentIndex+1 < paginationInfo.numPages) {
+        |
+      }
+    }
+  </span>
+  @if(paginationInfo.numPages != paginationInfo.start) {
+    <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start + paginationInfo.numItems}&numItems=@paginationInfo.numItems">&gt;</a>
+  }
+</div>

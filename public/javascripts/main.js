@@ -1,92 +1,13 @@
-function resetForm() {
-  $('#groupId-input').val('');
-  $('#artifactId-input').val('');
-  $('#description-input').val('');
-  $('#version-input').val('');
-  $('#newest-checkbox').attr('checked', false);
-}
-
-function makeUrl() {
-  var groupId = $('#groupId-input').val(),
-      artifactId = $('#artifactId-input').val(),
-      description = $('#description-input').val()
-      version = $('#newest-checkbox').is(':checked')
-              ? 'newest'
-              : $('#version-input').val()
-      map = {};
-  if ('' !== groupId) {
-    map['groupId'] = groupId;
-  }
-  if ('' !== artifactId) {
-    map['artifactId'] = artifactId;
-  }
-  if ('' !== description) {
-    map['description'] = description;
-  }
-  if ('' !== version) {
-    map['version'] = version;
-  }
-  var queries = [];
-  for (var i in map) {
-    queries.push(i + '=' + map[i]); 
-  }
-  var queryString = '?' + queries.join('&')
-  return 'archetypes/rest/archetypes' + (1 == queryString.length ? '' : queryString);
-}
-
-function updateList() {
-  $('#list-container').html('<img src="archetypes/assets/images/ajax-loader.gif" width="70px" style="margin: 15px"><br>');
-  var url = makeUrl();
-  $.getJSON(url, function(data) {
-    var html = '<table><col width="5%"><col width="15%"><col width="20%"><col width="10%"><col width="50%"><tr><th class="details"></th><th class="groupId">groupId</th><th class="artifactId">artifactId</th><th class="version">version</th><th class="description">description</th></tr>';
-    for (var i = 0; i < data.length; ++i) {
-      html + '<tr>';
-      html += '<td class="details"><a href="archetypes/details/' + data[i].groupId + '/' + data[i].artifactId + '/' + data[i].version + '">details</a></td>';
-      html += '<td class="groupId">' + data[i].groupId + '</td>';
-      html += '<td class="artifactId">' + data[i].artifactId + '</td>';
-      html += '<td class="version">' + data[i].version + '</td>';
-      html += '<td class="description">' + ('undefined' === typeof data[i].description ? '' : data[i].description) + '</td>';
-      html += '</tr>';
-    }
-    html += '</table>';
-    $('#list-container').html(html);
-  });
-}
-
 $(document).ready(function() {
-  updateList();
-});
-
-$(document).ready(function() {
+  if ('newest' == $("#version").val()) {
+    $('#newest-checkbox').attr('checked', 'checked');
+    $("#version").prop('readonly', 'readonly');
+  }
   $('#newest-checkbox').on('click', function() {
-    $("#version-input").prop('disabled', $(this).is(':checked'));
-    updateList();
+    var disabled = $(this).is(':checked');
+    $("#version").prop('readonly', disabled ? 'readonly' : '');
+    $("#version").val(disabled ? 'newest' : '');
   });
-  $('.form-line input').on('keyup', function() {
-    updateList();
-  });
-  $('.example-1 a').on('click', function() {
-    resetForm();
-    $('#artifactId-input').val('commons-');
-    updateList();
-  });
-  $('.example-2 a').on('click', function() {
-    resetForm();
-    $('#description-input').val('jee7 webapp');
-    $('#newest-checkbox').attr('checked', true);
-    $("#newest-checkbox").prop("checked", true);
-    updateList();
-  });
-  $('.example-3 a').on('click', function() {
-    resetForm();
-    $('#groupId-input').val('com.airhacks');
-    $('#newest-checkbox').attr('checked', true);
-    $("#newest-checkbox").prop("checked", true);
-    updateList();
-  });
-});
-
-$(document).ready(function() {
   $('#about').on('click', function() {
     $(this).hide();
   });

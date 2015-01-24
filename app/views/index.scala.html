@@ -1,46 +1,63 @@
-@(archetypes: List[Archetype])
+@import helper._
+@import models.PaginationInfo
+@import views.forms.search.ArchetypeSearch._
+
+@(searchForm: Form[SearchData], archetypes: List[Archetype], paginationInfo: Option[PaginationInfo] = None, searchData: SearchData, itemsTotal: Int)
+
+@implicitField = @{ FieldConstructor(searchInputField.f) }
 
 @main("wasis.nu/mit/archetypes?") {
-
-  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
-  <center>
+	<center>
+	  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
 	  <div class="form-container">
-	    <div class="form-line">
-	      <label for="groupId-input">groupId:</label>
-	      <input id="groupId-input" type="text">
-	    </div>
-	    <div class="form-line">
-	      <label for="artifactId-input">artifactId:</label>
-	      <input id="artifactId-input"" type="text">
-	    </div>
-	    <div class="form-line">
-	      <label for="version-input">version:</label>
-	      <input id="version-input" type="text">
+	    @form(action = routes.Application.index) {
+	      @inputText(searchForm("groupId"))
+	      @inputText(searchForm("artifactId"))
+	      @inputText(searchForm("version"))
 	      <div class="checkbox-line">
-		      <input id="newest-checkbox" type="checkbox">
+		      <input id="newest-checkbox" type="checkbox" name="">
 		      <label for="newest-checkbox">newest</label>
 	      </div>
-	    </div>
-	    <div class="form-line">
-	      <label for="description-input">description:</label>
-	      <input id="description-input" type="text">
-	    </div>
+	      @inputText(searchForm("description"))
+        <div class="form-line">
+          <label></label>
+	        <input type="submit" value="Search">
+        </div>
+	    }
 	  </div>
 	  <div id="help-container">
-	   This is a search engine for maven archetypes.<br>Try some of the examples:
-	   <ul>
-	   	<li class="example-1">archetypes with <a href="#">artifactId like "commons-"</a></li>
-	   	<li class="example-2">archetypes with a <a href="#">description containing "jee7" or "webapp", but only the newest version respectively</a></li>
-	   	<li class="example-3">newest versions of archetypes with <a href="#">groupId "com.airhacks"</a></li>
-	   </ul>
+	    This is a search engine for maven archetypes.
+	  </div>
+	  <div style="margin: 20px">
+      Found @itemsTotal items
 	  </div>
 	  <div id="list-container">
+	    <table>
+	    <col width="5%">
+	    <col width="15%">
+	    <col width="20%">
+	    <col width="10%">
+	    <col width="50%">
+	    <tr>
+	      <th class="details"></th>
+	      <th class="groupId">groupId</th>
+	      <th class="artifactId">artifactId</th>
+	      <th class="version">version</th>
+	      <th class="description">description</th>
+	    </tr>
+	    @for(archetype <- archetypes) {
+	      <tr>
+	        <td class="details"><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description)">details</a></td>
+	        <td class="groupId">@archetype.groupId</td>
+	        <td class="artifactId">@archetype.artifactId</td>
+	        <td class="version">@archetype.version</td>
+	        <td class="description">@archetype.description</td>
+	      </tr>
+	    }
+	    </table>
 	  </div>
-  </center>
-
-  @*
-  @helper.form(action = routes.ArchetypesController.reimportArchetypes()) {
-     <input type="submit" class="btn btn-primary" value="Reimport archetypes">
+	</center>
+	@if(paginationInfo.isDefined) {
+    @paginator(paginationInfo.get, searchData)
   }
-  *@
 }

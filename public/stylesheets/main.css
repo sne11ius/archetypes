@@ -59,6 +59,16 @@ h1 {
 	width: 170px;
 	border: 1px solid #cdcdcd;
 	border-radius: 3px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.form-line input[type="submit"] {
+ 	border: 1px solid white;
+}
+
+.form-line input[readonly] {
+	background-color: #ddd;
 }
 
 .checkbox-line label {
@@ -69,7 +79,7 @@ h1 {
 
 .checkbox-line [type="checkbox"] {
 	width: 20px;
-	margin-left: 100px;
+	margin-left: 40px;
 	position: relative;
   top: 2px;
 }
@@ -80,6 +90,7 @@ h1 {
 
 #help-container {
 	width: 500px;
+	margin: 20px;
 }
 
 #help-container li {
@@ -151,27 +162,23 @@ th {
 	font-size: 13px;
   margin-left: 20px;
 }
-/* Pretty printing styles. Used with prettify.js. */
 
-/* SPAN elements with the classes below are added by prettyprint. */
-.pln { color: #000 }  /* plain text */
+.pln { color: #000 }
 
 @media screen {
-  .str { color: #080 }  /* string content */
-  .kwd { color: #008 }  /* a keyword */
-  .com { color: #800 }  /* a comment */
-  .typ { color: #606 }  /* a type name */
-  .lit { color: #066 }  /* a literal value */
-  /* punctuation, lisp open bracket, lisp close bracket */
+  .str { color: #080 }
+  .kwd { color: #008 }
+  .com { color: #800 }
+  .typ { color: #606 }
+  .lit { color: #066 }
   .pun, .opn, .clo { color: #660 }
-  .tag { color: #008 }  /* a markup tag name */
-  .atn { color: #606 }  /* a markup attribute name */
-  .atv { color: #080 }  /* a markup attribute value */
-  .dec, .var { color: #606 }  /* a declaration; a variable name */
-  .fun { color: red }  /* a function name */
+  .tag { color: #008 }
+  .atn { color: #606 }
+  .atv { color: #080 }
+  .dec, .var { color: #606 }
+  .fun { color: red }
 }
 
-/* Use higher contrast and text-weight for printable form. */
 @media print, projection {
   .str { color: #060 }
   .kwd { color: #006; font-weight: bold }
@@ -184,12 +191,9 @@ th {
   .atv { color: #060 }
 }
 
-/* Put a border around prettyprinted code snippets. */
-pre.prettyprint { padding: 2px;/* border: 1px solid #888 */}
-/* Specify class=linenums on a pre to get line numbering */
-ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE; } /* IE indents via margin-left */
+pre.prettyprint { padding: 2px;}
+ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE; }
 li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8 { list-style-type: decimal; }
-/* Alternate shading for lines */
 li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 .prettyprint .linenums {
   padding-left: 20px;
@@ -280,4 +284,8 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 #about .small + .small {
 	position: relative;
 	top: 14px;
+}
+
+.paginator {
+	text-align: center;
 }
