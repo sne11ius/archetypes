@@ -124,7 +124,9 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         "-DprojectName=ExampleProject",
         "-DnewProjectName=ExampleProject",
         "-DmoduleName=ExampleModule",
-        "-Dmodule=ExampleModule"
+        "-Dmodule=ExampleModule",
+        "-DwebContextPath=TestWebContextPath",
+        "-DgaeApplicationName=TestGaeApplicationName"
     )) directory new File(baseDir))
     if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
