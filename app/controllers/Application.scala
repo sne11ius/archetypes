@@ -31,7 +31,7 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
         val numPages = ((numArchetypes:Float) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)
         Logger.debug(s"paginationInfo: $paginationInfo")
-        Ok(views.html.index(archetypeSearchForm.fill(searchData), archetypes.take(100), Some(paginationInfo), searchData, numArchetypes))
+        Ok(views.html.index(archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes))
       }
     )
   }
