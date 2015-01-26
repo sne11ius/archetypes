@@ -21,7 +21,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
             //case Some(archetypeFound) => archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).update(dbArchetype)
             case None => archetypes.insert(dbArchetype)
             case Some(archetypeFound) => {
-              Logger.info(s"Archetype already exists: $dbArchetype")
+              //Logger.info(s"Archetype already exists: $dbArchetype")
             }
           }
         }

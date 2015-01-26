@@ -1,7 +1,6 @@
 import play.api._
 import play.api.Play.current
 import play.api.mvc._
-
 import com.google.inject.{Guice, AbstractModule}
 import play.api.GlobalSettings
 import services.impl.ArchetypesServiceImpl
@@ -11,6 +10,11 @@ import com.mohiva.play.htmlcompressor.HTMLCompressorFilter
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor
 import com.mohiva.play.xmlcompressor.XMLCompressorFilter
 import play.filters.gzip.GzipFilter
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.concurrent.Akka
+import scala.concurrent.duration._
+import services.ArchetypesService
+import services.impl.ArchetypesServiceImpl
 
 object Global extends WithFilters(new GzipFilter(), HTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -18,6 +22,29 @@ object Global extends WithFilters(new GzipFilter(), HTMLCompressorFilter(), XMLC
 
   override def getControllerInstance[A](controllerClass: Class[A]): A = injector.getInstance(controllerClass)
   
+  override def onStart(app: Application) {
+    Akka.system.scheduler.scheduleOnce(1 second) {
+      {
+        val archetypesService = injector.getInstance(classOf[ArchetypesService])
+        Logger.debug("Updating database...")
+        Logger.debug("Loading archetypes...")
+        var newArchetypes = archetypesService.load
+        Logger.debug(s"${newArchetypes.size} archetypes loaded.")
+        Logger.debug("Adding to database...")
+        archetypesService.addAll(newArchetypes)
+        Logger.debug("...done")
+        val newestArchetypes = archetypesService.find(None, None, Some("newest"), None)
+        Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
+        Logger.debug("Generating metainfo...")
+        newestArchetypes.zipWithIndex.foreach {
+          case (archetype, index) => {
+            Logger.debug(s"$index/${newestArchetypes.length} -> Generating $archetype")
+            archetypesService.loadArchetypeContent(archetype)
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

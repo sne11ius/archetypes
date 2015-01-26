@@ -23,11 +23,9 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
       "[empty file]"
     } else {
       val lexer = FilenameUtils.getExtension(localFile.toString())
-      //Logger.debug(s"source: $source")
-      //Logger.debug(s"lexer: $lexer")
       Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
           "code" -> Seq(source),
-          "linenos" -> Seq("yep"),
+          "linenos" -> Seq("yes, i want line numbers"),
           "lexer" -> Seq(lexer)
         )).map { response =>
           if (200 == response.status) {

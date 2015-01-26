@@ -57,7 +57,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
     val allArchetypes = archetypsDao.findAll
-    Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
+    //Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
     val archetypes = archetypsDao.findAll.filter { a =>
       if (groupId.isDefined) {
         a.groupId.toLowerCase().contains(groupId.get.toLowerCase())
@@ -95,7 +95,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       } else {
         archetypes
       }
-    Logger.debug(s"Total # archetypes after filter: ${result.size}")
+    //Logger.debug(s"Total # archetypes after filter: ${result.size}")
     result
   }
   
@@ -139,18 +139,18 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     val baseDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
     if (archetype.localDir.isDefined) {
       val result = Some(ArchetypeContent(archetype, archetype.localDir.get + "/example-app"))
-      Logger.debug(s"result: $result")
+      //Logger.debug(s"result: $result")
       result
     } else {
       Logger.debug(s"baseDir: $baseDir")
       if (!archetypeGenerate(archetype, "com.example", "example-app", baseDir)) {
-        Logger.debug("Cannot archetypeGenerate D:")
+        //Logger.debug("Cannot archetypeGenerate D:")
         None
       } else {
         val updatedArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(baseDir))
         safe(updatedArchetype)
         val result = Some(ArchetypeContent(updatedArchetype, baseDir + "/example-app"))
-        Logger.debug(s"result: $result")
+        //Logger.debug(s"result: $result")
         result
       }
     }
