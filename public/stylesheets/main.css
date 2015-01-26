@@ -294,9 +294,8 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 	text-align: center;
 }
 
-
 .directory-tree {
-	text-align: left;
+  text-align: left;
   padding-left: 0;
   font-family: Arial;
   font-size: 12px;
@@ -326,7 +325,6 @@ li.file {
   top: 3px;
   left: -6px;;
 }
-
 
 .file:before {
   content: ' ';
@@ -369,14 +367,20 @@ li.file {
 
 .directory-tree li.active {
   background-color: rgb(149, 194, 255);
+  padding-bottom: 3px;
+  border-radius: 3px;
 }
 .directory-tree a:hover {
   background-color: rgb(149, 194, 255);
+  border-radius: 3px;
+  padding: 2px;
+  padding-left: 3px;
+  padding-right: 3px;
 }
+
 .directory-tree a {
   text-decoration: none;
   color: black;
-	padding-left: 2px;
-	padding-right: 2px;
-}
+  padding-left: 2px;
+  padding-right: 2px;
 }
