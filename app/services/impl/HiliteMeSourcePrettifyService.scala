@@ -30,7 +30,11 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
           "linenos" -> Seq("yep"),
           "lexer" -> Seq(lexer)
         )).map { response =>
-          response.body
+          if (200 == response.status) {
+            response.body
+          } else {
+            source.replace("\n", "<br>")
+          }
         }, 10 seconds)
     }
   }
