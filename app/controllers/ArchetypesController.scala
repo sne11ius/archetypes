@@ -1,5 +1,6 @@
 package controllers
 
+import play.api.Play.current
 import play.api._
 import play.api.mvc._
 import play.api.libs.json._
@@ -16,30 +17,57 @@ import java.util.Arrays
 import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
 import views.forms.search.ArchetypeSearch._
+import nu.wasis.dir2html.DirToHtml
+import services.SourcePrettifyService
 
-class ArchetypesController @Inject() (archetypesService: ArchetypesService) extends Controller {
+class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
-  /*
   def reimportArchetypes = DBAction { implicit rs =>
     var newArchetypes = archetypesService.load
     Logger.debug(s"${newArchetypes.size} archetypes loaded.")
     Logger.debug("Adding to database...")
     archetypesService.addAll(newArchetypes)
     Logger.debug("...done")
-    Ok(views.html.index(archetypesService.findAll))
+    NoContent
   }
   
+  /*
   def archetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
     val archetypes = archetypesService.find(groupId, artifactId, version, description)
     Ok(views.html.index(archetypes))
   }
   */
   
-  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String]) = DBAction { implicit rs =>
+  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], filename: Option[String]) = DBAction { implicit rs =>
     val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription))
-    val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
-    if (1 == archetype.size) {
-      Ok(views.html.archetypeDetails(archetype.head, searchData))
+    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
+    if (1 <= archetypes.size) {
+      val archetype = archetypes.head
+      archetypesService.loadArchetypeContent(archetype) match {
+        case None => NotFound
+        case Some(content) => {
+          Logger.debug(s"content: $content")
+          Logger.debug(s"basepath: ${content.contentBasePath}")
+          val fileTree = filename match {
+            case None => Some(DirToHtml.toHtml(new File(content.contentBasePath)))
+            case Some(file) => {
+              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, None).absoluteURL(current.configuration.getBoolean("https").get);
+              val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
+              val fileSource = sourcePrettifyService.toPrettyHtml(new File(content.contentBasePath), file)
+              Some(DirToHtml.toHtml(new File(content.contentBasePath), file, hrefTemplate))
+            }
+          }
+          val fileSource = 
+            if (filename.isDefined) {
+              Some(sourcePrettifyService.toPrettyHtml(new File(content.contentBasePath), filename.get))
+            } else {
+              None
+            }
+          //Logger.debug(s"$fileSource")
+          Logger.debug(s"filename: $filename")
+          Ok(views.html.archetypeDetails(archetype, searchData, fileTree, fileSource))
+        }
+      }
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound

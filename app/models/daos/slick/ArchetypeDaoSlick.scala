@@ -16,15 +16,16 @@ class ArchetypeDaoSlick extends ArchetypeDao {
       val dbArchetype = DBArchetype(a.id, a.groupId, a.artifactId, a.version, a.description, a.repository, a.localDir)
       archetypes.filter(_.id === dbArchetype.id).firstOption match {
         case Some(archetypeFound) => archetypes.filter(_.id === dbArchetype.id).update(dbArchetype)
-        case None => archetypes.insert(dbArchetype)
+        case None => {
+          archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).firstOption match {
+            //case Some(archetypeFound) => archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).update(dbArchetype)
+            case None => archetypes.insert(dbArchetype)
+            case Some(archetypeFound) => {
+              Logger.info(s"Archetype already exists: $dbArchetype")
+            }
+          }
+        }
       }
-      /*
-      archetypes.filter(a => a.groupId === archetype.groupId && a.artifactId === archetype.artifactId && a.version === archetype.version).firstOption match {
-        case None => archetypes.insert(DBArchetype(
-          None, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, archetype.localDir
-        ))
-        case Some(_) => ()
-      }*/
     }
   }
 

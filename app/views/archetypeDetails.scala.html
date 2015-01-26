@@ -1,6 +1,6 @@
 @import views.forms.search.ArchetypeSearch._
 
-@(archetype: Archetype, searchData: Option[SearchData])
+@(archetype: Archetype, searchData: Option[SearchData], fileTree: Option[String], fileSource: Option[String])
 
 @main("wasis.nu/mit/archetypes?") {
 
@@ -44,21 +44,25 @@
         loadMetaData('@archetype.groupId', '@archetype.artifactId', '@archetype.version');
       });
     </script>
-    <div id="wait-hint">
+    <!--div id="wait-hint">
 	    <img src="@routes.Assets.at("images/ajax-loader.gif")" width="70px" style="margin: 15px"><br>
 	    Metadata is beeing generated, please be patient...
-    </div>
-    <div id="details" style="display: none">
+    </div-->
+    <div id="details">
 	    Archetype content:
 	    <div id="browser-container">
-		    <div id="file-browser"></div>
-		    <div id="file-content"></div>
+		    <div id="file-browser">
+          @Html(fileTree.getOrElse("[no file browser available]"))
+		    </div>
+		    <div id="file-content">
+		      @Html(fileSource.getOrElse("[no file content available]"))
+		    </div>
 	    </div>
     </div>
     <script src="@routes.Assets.at("javascripts/markdown.min.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("jqm-filetree/jquery.easing.js")" type="text/javascript"></script>
+    <!--script src="@routes.Assets.at("jqm-filetree/jquery.easing.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("jqm-filetree/jqueryFileTree.js")" type="text/javascript"></script>
-    <link href="@routes.Assets.at("jqm-filetree/jqueryFileTree.css")" rel="stylesheet" type="text/css" media="screen" />
+    <link href="@routes.Assets.at("jqm-filetree/jqueryFileTree.css")" rel="stylesheet" type="text/css" media="screen" /-->
     <script src="//google-code-prettify.googlecode.com/svn/loader/prettify.js?autoload=false"></script>
   </center>
 }

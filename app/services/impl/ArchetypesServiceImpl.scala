@@ -9,7 +9,6 @@ import services.ArchetypesService
 import play.api.libs.ws.WS
 import models.Archetype
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import javax.inject.Inject
 import models.daos.ArchetypeDao
@@ -19,6 +18,7 @@ import java.io.File
 import java.io.FileInputStream
 import org.apache.commons.io.IOUtils
 import models.ArchetypeContent
+import models.Archetype
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
@@ -137,12 +137,22 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   
   override def loadArchetypeContent(archetype: Archetype): Option[ArchetypeContent] = {
     val baseDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
-    Logger.debug(s"baseDir: $baseDir")
-    if (!archetypeGenerate(archetype, "com.example", "example-app", baseDir)) {
-      Logger.debug("Cannot archetypeGenerate D:")
-      None
+    if (archetype.localDir.isDefined) {
+      val result = Some(ArchetypeContent(archetype, archetype.localDir.get + "/example-app"))
+      Logger.debug(s"result: $result")
+      result
     } else {
-      Some(ArchetypeContent(archetype, baseDir + "/example-app"))
+      Logger.debug(s"baseDir: $baseDir")
+      if (!archetypeGenerate(archetype, "com.example", "example-app", baseDir)) {
+        Logger.debug("Cannot archetypeGenerate D:")
+        None
+      } else {
+        val updatedArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(baseDir))
+        safe(updatedArchetype)
+        val result = Some(ArchetypeContent(updatedArchetype, baseDir + "/example-app"))
+        Logger.debug(s"result: $result")
+        result
+      }
     }
   }
 }
