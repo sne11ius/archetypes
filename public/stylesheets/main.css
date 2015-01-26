@@ -219,16 +219,8 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
 	text-decoration: none;
 }
 
-#blog-hint a:hover:after {
-	content: ' ';
-	position: fixed;
-	display: block;
-	border-radius: 2px;
-	left: 46px;
-	top: 13px;
-	width: 5px;
-	height: 7px;
-	background-color: black;
+#blog-hint a:hover {
+	text-decoration: underline;
 }
 
 #about-hint {
@@ -242,16 +234,8 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { background-color: #EDEDED; }
   border-radius: 5px;
 }
 
-#about-hint a:hover:after {
-  content: ' ';
-  position: fixed;
-  display: block;
-  border-radius: 2px;
-  right: 47px;
-  top: 13px;
-  width: 5px;
-  height: 7px;
-  background-color: black;
+#about-hint a:hover {
+  text-decoration: underline;
 }
 
 #about {
