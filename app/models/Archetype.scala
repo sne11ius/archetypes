@@ -8,8 +8,9 @@ case class Archetype(
   groupId: String,
   artifactId: String,
   version: String,
-  //javaVersion: String,
   description: Option[String],
   repository: Option[String],
-  localDir: Option[String]
+  localDir: Option[String],
+  javaVersion: Option[String],
+  generateLog: Option[String]
 )
