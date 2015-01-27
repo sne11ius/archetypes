@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import services.ArchetypesService
 import services.impl.ArchetypesServiceImpl
 
-object Global extends WithFilters(new GzipFilter(), HTMLCompressorFilter(), XMLCompressorFilter()) {
+object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
   val injector = Guice.createInjector(new ArchetypesModule)
 
@@ -50,7 +50,7 @@ object Global extends WithFilters(new GzipFilter(), HTMLCompressorFilter(), XMLC
 /**
  * Defines a user-defined HTML compressor filter.
  */
-object HTMLCompressorFilter {
+object CustomHTMLCompressorFilter {
 
   /**
    * Creates the HTML compressor filter.
