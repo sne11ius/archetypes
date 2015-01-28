@@ -23,27 +23,30 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   override def getControllerInstance[A](controllerClass: Class[A]): A = injector.getInstance(controllerClass)
   
   override def onStart(app: Application) {
-    Akka.system.scheduler.scheduleOnce(1 second) {
-      {
-        val archetypesService = injector.getInstance(classOf[ArchetypesService])
-        Logger.debug("Updating database...")
-        Logger.debug("Loading archetypes...")
-        var newArchetypes = archetypesService.loadFromAllCatalogs
-        Logger.debug(s"${newArchetypes.size} archetypes loaded.")
-        Logger.debug("Adding to database...")
-        archetypesService.addAll(newArchetypes)
-        Logger.debug("...done")
-        val newestArchetypes = archetypesService.find(None, None, Some("newest"), None)
-        Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
-        Logger.debug("Generating metainfo...")
-        newestArchetypes.zipWithIndex.foreach {
-          case (archetype, index) => {
-            Logger.debug(s"$index/${newestArchetypes.length} -> Generating $archetype")
-            archetypesService.loadArchetypeContent(archetype)
-          }
+    Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
+  }
+  
+  def updateArchetypes = {
+    val archetypesService = injector.getInstance(classOf[ArchetypesService])
+      Logger.debug("Updating database...")
+      Logger.debug("Loading archetypes...")
+      var newArchetypes = archetypesService.loadFromAllCatalogs
+      Logger.debug(s"${newArchetypes.size} archetypes loaded.")
+      Logger.debug("Adding to database...")
+      archetypesService.addAll(newArchetypes)
+      Logger.debug("...done")
+      val newestArchetypes = archetypesService.find(None, None, Some("newest"), None)
+      Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
+      Logger.debug("Generating metainfo...")
+      newestArchetypes.zipWithIndex.foreach {
+        case (archetype, index) => {
+          Logger.debug(s"$index/${newestArchetypes.length} -> Generating $archetype")
+          val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+          // Logger.debug(s"Maven log:")
+          // Logger.debug(s"${loadedArchetype.generateLog}");
+          archetypesService.safe(loadedArchetype)
         }
       }
-    }
   }
 }
 
