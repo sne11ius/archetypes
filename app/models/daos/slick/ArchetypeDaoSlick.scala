@@ -11,7 +11,7 @@ import models.Archetype
 
 class ArchetypeDaoSlick extends ArchetypeDao {
   
-  def safe(a: Archetype): Unit = {
+  override def safe(a: Archetype) = {
     DB withSession { implicit session =>
       val dbArchetype = DBArchetype(
         a.id,
@@ -37,7 +37,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
     }
   }
 
-  def findAll: List[Archetype] = {
+  override def findAll: List[Archetype] = {
     DB withSession { implicit session =>
       archetypes.list.sortBy { a => a.groupId }.map { a => Archetype(
         a.id,
@@ -47,8 +47,8 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         a.description,
         a.repository,
         a.javaVersion,
-        a.generateLog,
-        a.localDir
+        a.localDir,
+        a.generateLog
       )}
     }
   }
