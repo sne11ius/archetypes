@@ -23,6 +23,7 @@ import models.MavenGenerateResult
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import models.MavenGenerateResult
+import models.MavenGenerateResult
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
@@ -52,11 +53,11 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypsDao.findAll
   }
 
-  def addAll(archetypes: List[Archetype]) = {
+  override def addAll(archetypes: List[Archetype]) = {
     archetypes.map { archetypsDao.safe }
   }
   
-  def safe(archetype: Archetype): Unit = {
+  override def safe(archetype: Archetype): Unit = {
     archetypsDao.safe(archetype)
   }
   
@@ -66,27 +67,27 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     //Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
     val archetypes = archetypsDao.findAll.filter { a =>
       if (groupId.isDefined) {
-        a.groupId.toLowerCase().contains(groupId.get.toLowerCase())
+        a.groupId.toLowerCase().contains(groupId.get.toLowerCase)
       } else {
         true
       }
     }.filter { a =>
       if (artifactId.isDefined) {
-        a.artifactId.toLowerCase().contains(artifactId.get.toLowerCase())
+        a.artifactId.toLowerCase().contains(artifactId.get.toLowerCase)
       } else {
         true
       }
     }.filter { a =>
       if (description.isDefined) {
         description.get.split("[\\p{Punct}\\s]+").filterNot { s => s.trim().isEmpty() }.exists { s =>
-          a.description.getOrElse("").toLowerCase().contains(s.toLowerCase())
+          a.description.getOrElse("").toLowerCase().contains(s.toLowerCase)
         }
       } else {
         true
       }
     }.filter { a =>
       if (version.isDefined && version.get != "newest") {
-        a.version.toLowerCase().contains(version.get.toLowerCase())
+        a.version.toLowerCase().contains(version.get.toLowerCase)
       } else {
         true
       }
@@ -130,7 +131,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   */
   private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
     Logger.debug(s"Creating $baseDir")
-    if (!(new File(baseDir.replace("/", "\\")).mkdirs())) {
+    if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
       MavenGenerateResult(-1, s"Cannot create base directory: $baseDir")
     } else {
@@ -164,32 +165,31 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     } else {
       Logger.debug(s"baseDir: $baseDir")
       archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
-        case MavenGenerateResult(exitValue, stdout) => {
-          if (0 == exitValue) {
-            Archetype(
-              archetype.id,
-              archetype.groupId,
-              archetype.artifactId,
-              archetype.version,
-              archetype.description,
-              archetype.repository,
-              Some(extractJavaVersion(baseDir)),
-              Some(baseDir),
-              Some(stdout)
-            )
-          } else {
-            Archetype(
-              archetype.id,
-              archetype.groupId,
-              archetype.artifactId,
-              archetype.version,
-              archetype.description,
-              archetype.repository,
-              None,
-              None,
-              Some(stdout.replace("\n", "<br>"))
-            )
-          }
+        case MavenGenerateResult(0, stdout) => {
+          Archetype(
+            archetype.id,
+            archetype.groupId,
+            archetype.artifactId,
+            archetype.version,
+            archetype.description,
+            archetype.repository,
+            Some(extractJavaVersion(baseDir)),
+            Some(baseDir),
+            Some(stdout)
+          )
+        }
+        case MavenGenerateResult(_, stdout) => {
+          Archetype(
+            archetype.id,
+            archetype.groupId,
+            archetype.artifactId,
+            archetype.version,
+            archetype.description,
+            archetype.repository,
+            None,
+            None,
+            Some(stdout)
+          )
         }
       }
       //Logger.debug(s"Fully loaded archetype: $loadedArchetype")
