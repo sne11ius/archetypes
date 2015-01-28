@@ -17,14 +17,18 @@ import scala.sys.process._
 import java.io.File
 import java.io.FileInputStream
 import org.apache.commons.io.IOUtils
-import models.ArchetypeContent
 import models.Archetype
+import models.Archetype
+import models.MavenGenerateResult
+import java.io.ByteArrayOutputStream
+import java.io.PrintWriter
+import models.MavenGenerateResult
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
   
-  override def load: List[Archetype] = {
+  override def loadFromAllCatalogs: List[Archetype] = {
     current.configuration.getStringList("archetypes.catalogs").map(_.toList).get.flatMap { url =>
       Await.result(WS.url(url).withFollowRedirects(true).get().map { response =>
         response.xml \\ "archetype-catalog" \\ "archetypes" \\ "archetype" map { a =>
@@ -35,6 +39,8 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
             (a \ "version").text,
             (a \ "description").textOption,
             (a \ "repository").textOption,
+            None,
+            None,
             None
           )
         }
@@ -109,50 +115,90 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       archetype.version
     ).mkString(File.separator)
   }
-  
-  private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String) = {
-    Logger.debug(s"Creating $baseDir")
-    val process = Process((new java.lang.ProcessBuilder(
-      "mvn",
-      "archetype:generate",
-        "-DinteractiveMode=false",
-        s"-DarchetypeGroupId=${archetype.groupId}",
-        s"-DarchetypeArtifactId=${archetype.artifactId}",
-        s"-DarchetypeVersion=${archetype.version}",
-        s"-DgroupId=$groupId",
-        s"-DartifactId=$artifactId",
-        "-DprojectName=ExampleProject",
-        "-DnewProjectName=ExampleProject",
-        "-DmoduleName=ExampleModule",
-        "-Dmodule=ExampleModule",
-        "-DwebContextPath=TestWebContextPath",
-        "-DgaeApplicationName=TestGaeApplicationName"
-    )) directory new File(baseDir))
-    if (!(new File(baseDir).mkdirs())) {
-      Logger.error(s"Cannot mkdir: $baseDir")
+  /*
+  http://www.wenda.io/questions/151281/scala-process-capture-standard-out-and-exit-code.html
+    private def runCommand(cmd: Seq[String]): (Int, String, String) = {
+      val stdout = new ByteArrayOutputStream
+      val stderr = new ByteArrayOutputStream
+      val stdoutWriter = new PrintWriter(stdout)
+      val stderrWriter = new PrintWriter(stderr)
+      val exitValue = cmd.!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
+      stdoutWriter.close()
+      stderrWriter.close()
+      (exitValue, stdout.toString, stderr.toString)
     }
-    Logger.debug(s"Generating: $process")
-    0 == process.!
+  */
+  private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
+    Logger.debug(s"Creating $baseDir")
+    if (!(new File(baseDir.replace("/", "\\")).mkdirs())) {
+      Logger.error(s"Cannot mkdir: $baseDir")
+      MavenGenerateResult(-1, s"Cannot create base directory: $baseDir")
+    } else {
+      val sb = new StringBuffer
+      val process = Process((new java.lang.ProcessBuilder(
+        "C:\\Users\\coli\\Documents\\bin\\apache-maven-3.0.5\\bin\\mvn.bat",
+        "archetype:generate",
+          "-DinteractiveMode=false",
+          s"-DarchetypeGroupId=${archetype.groupId}",
+          s"-DarchetypeArtifactId=${archetype.artifactId}",
+          s"-DarchetypeVersion=${archetype.version}",
+          s"-DgroupId=$groupId",
+          s"-DartifactId=$artifactId",
+          "-DprojectName=ExampleProject",
+          "-DnewProjectName=ExampleProject",
+          "-DmoduleName=ExampleModule",
+          "-Dmodule=ExampleModule",
+          "-DwebContextPath=TestWebContextPath",
+          "-DgaeApplicationName=TestGaeApplicationName"
+      )) directory new File(baseDir))
+      val exitValue = process.run(BasicIO(false, sb, None)).exitValue
+      MavenGenerateResult(exitValue, sb.toString)
+    }
   }
   
-  override def loadArchetypeContent(archetype: Archetype): Option[ArchetypeContent] = {
+  override def loadArchetypeContent(archetype: Archetype): Archetype = {
     val baseDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
     if (archetype.localDir.isDefined) {
-      val result = Some(ArchetypeContent(archetype, archetype.localDir.get + "/example-app"))
-      //Logger.debug(s"result: $result")
-      result
+      Logger.debug(s"localDir already defined as: ${archetype.localDir}")
+      archetype
     } else {
       Logger.debug(s"baseDir: $baseDir")
-      if (!archetypeGenerate(archetype, "com.example", "example-app", baseDir)) {
-        //Logger.debug("Cannot archetypeGenerate D:")
-        None
-      } else {
-        val updatedArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(baseDir))
-        safe(updatedArchetype)
-        val result = Some(ArchetypeContent(updatedArchetype, baseDir + "/example-app"))
-        //Logger.debug(s"result: $result")
-        result
+      archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
+        case MavenGenerateResult(exitValue, stdout) => {
+          if (0 == exitValue) {
+            Archetype(
+              archetype.id,
+              archetype.groupId,
+              archetype.artifactId,
+              archetype.version,
+              archetype.description,
+              archetype.repository,
+              Some(extractJavaVersion(baseDir)),
+              Some(baseDir),
+              Some(stdout)
+            )
+          } else {
+            Archetype(
+              archetype.id,
+              archetype.groupId,
+              archetype.artifactId,
+              archetype.version,
+              archetype.description,
+              archetype.repository,
+              None,
+              None,
+              Some(stdout.replace("\n", "<br>"))
+            )
+          }
+        }
       }
+      //Logger.debug(s"Fully loaded archetype: $loadedArchetype")
+      //safe(loadedArchetype)
+      //loadedArchetype
     }
+  }
+  
+  private def extractJavaVersion(baseDir: String): String = {
+    "1.4"
   }
 }

@@ -13,7 +13,9 @@ object ArchetypeSlickDB {
     version: String,
     description: Option[String],
     repository: Option[String],
-    localDir: Option[String]
+    javaVersion: Option[String],
+    localDir: Option[String],
+    generateLog: Option[String]
   )
   
   class Archetypes(tag: Tag) extends Table[DBArchetype](tag, "archetype") {
@@ -23,8 +25,10 @@ object ArchetypeSlickDB {
     def version = column[String]("version")
     def description = column[Option[String]]("description", O.DBType("LONGTEXT"))
     def repository = column[Option[String]]("repository")
+    def javaVersion = column[Option[String]]("javaVersion")
     def localDir = column[Option[String]]("localDir")
-    def * = (id.?, groupId, artifactId, version, description, repository, localDir) <> (DBArchetype.tupled, DBArchetype.unapply)
+    def generateLog = column[Option[String]]("generateLog", O.DBType("LONGTEXT"))
+    def * = (id.?, groupId, artifactId, version, description, repository, javaVersion, localDir, generateLog) <> (DBArchetype.tupled, DBArchetype.unapply)
     
     def idx = index("idx_a", (groupId, artifactId, version), unique = true)
   }

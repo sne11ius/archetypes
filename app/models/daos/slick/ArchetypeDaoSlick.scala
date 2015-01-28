@@ -13,15 +13,23 @@ class ArchetypeDaoSlick extends ArchetypeDao {
   
   def safe(a: Archetype): Unit = {
     DB withSession { implicit session =>
-      val dbArchetype = DBArchetype(a.id, a.groupId, a.artifactId, a.version, a.description, a.repository, a.localDir)
+      val dbArchetype = DBArchetype(
+        a.id,
+        a.groupId,
+        a.artifactId,
+        a.version,
+        a.description,
+        a.repository,
+        a.javaVersion,
+        a.localDir,
+        a.generateLog
+      )
       archetypes.filter(_.id === dbArchetype.id).firstOption match {
         case Some(archetypeFound) => archetypes.filter(_.id === dbArchetype.id).update(dbArchetype)
         case None => {
           archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).firstOption match {
-            //case Some(archetypeFound) => archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).update(dbArchetype)
             case None => archetypes.insert(dbArchetype)
             case Some(archetypeFound) => {
-              //Logger.info(s"Archetype already exists: $dbArchetype")
             }
           }
         }
@@ -32,7 +40,15 @@ class ArchetypeDaoSlick extends ArchetypeDao {
   def findAll: List[Archetype] = {
     DB withSession { implicit session =>
       archetypes.list.sortBy { a => a.groupId }.map { a => Archetype(
-        a.id, a.groupId, a.artifactId, a.version, a.description, a.repository, a.localDir
+        a.id,
+        a.groupId,
+        a.artifactId,
+        a.version,
+        a.description,
+        a.repository,
+        a.javaVersion,
+        a.generateLog,
+        a.localDir
       )}
     }
   }

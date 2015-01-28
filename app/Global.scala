@@ -28,7 +28,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
         val archetypesService = injector.getInstance(classOf[ArchetypesService])
         Logger.debug("Updating database...")
         Logger.debug("Loading archetypes...")
-        var newArchetypes = archetypesService.load
+        var newArchetypes = archetypesService.loadFromAllCatalogs
         Logger.debug(s"${newArchetypes.size} archetypes loaded.")
         Logger.debug("Adding to database...")
         archetypesService.addAll(newArchetypes)

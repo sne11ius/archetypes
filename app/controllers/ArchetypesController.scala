@@ -19,11 +19,13 @@ import java.io.FileInputStream
 import views.forms.search.ArchetypeSearch._
 import nu.wasis.dir2html.DirToHtml
 import services.SourcePrettifyService
+import models.Archetype
+import models.Archetype
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
   def reimportArchetypes = DBAction { implicit rs =>
-    var newArchetypes = archetypesService.load
+    var newArchetypes = archetypesService.loadFromAllCatalogs
     Logger.debug(s"${newArchetypes.size} archetypes loaded.")
     Logger.debug("Adding to database...")
     archetypesService.addAll(newArchetypes)
@@ -43,46 +45,84 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
     if (1 <= archetypes.size) {
       val archetype = archetypes.head
-      archetypesService.loadArchetypeContent(archetype) match {
-        case None => NotFound
-        case Some(content) => {
-          Logger.debug(s"content: $content")
-          Logger.debug(s"basepath: ${content.contentBasePath}")
-          val fileTree = filename match {
-            case None => Some(DirToHtml.toHtml(new File(content.contentBasePath)))
-            case Some(file) => {
+      val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+      Logger.debug(s"Loaded archetype: $loadedArchetype")
+      Logger.debug(s"basepath: ${archetype.localDir}")
+      val fileTree = filename match {
+        case None => {
+          if (loadedArchetype.localDir.isDefined)
+            Some(DirToHtml.toHtml(new File(loadedArchetype.localDir.get)))
+          else
+            None
+        }
+        case Some(file) => {
+          loadedArchetype.localDir match {
+            case None => None
+            case Some(dir) => {
               val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, None).absoluteURL(current.configuration.getBoolean("https").get);
               val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
-              val fileSource = sourcePrettifyService.toPrettyHtml(new File(content.contentBasePath), file)
-              Some(DirToHtml.toHtml(new File(content.contentBasePath), file, hrefTemplate))
+              val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir), file)
+              Some(DirToHtml.toHtml(new File(dir), file, hrefTemplate))
             }
           }
-          val fileSource = 
-            if (filename.isDefined) {
-              Some(sourcePrettifyService.toPrettyHtml(new File(content.contentBasePath), filename.get))
-            } else {
-              None
-            }
-          //Logger.debug(s"$fileSource")
-          Logger.debug(s"filename: $filename")
-          Ok(views.html.archetypeDetails(archetype, searchData, fileTree, fileSource))
         }
       }
+      val fileSource = 
+        if (filename.isDefined && loadedArchetype.localDir.isDefined) {
+          Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get), filename.get))
+        } else {
+          None
+        }
+      //Logger.debug(s"$fileSource")
+      Logger.debug(s"filename: $filename")
+      Ok(views.html.archetypeDetails(archetype, searchData, fileTree, fileSource))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
     }
   }
+
+  implicit val userReads: Reads[Archetype] = (
+    (__ \ "id").readNullable[Long] and
+    (__ \ "groupId").read[String] and
+    (__ \ "artifactId").read[String] and
+    (__ \ "version").read[String] and
+    (__ \ "description").readNullable[String] and
+    (__ \ "repository").readNullable[String] and
+    (__ \ "javaVersion").readNullable[String] and
+    Reads.pure(None) and
+    Reads.pure(None)
+  )(Archetype)
   
-  implicit object ArchetypeFormat extends Format[Archetype] {
+  implicit val userWrites = new Writes[Archetype] {
+    def writes(a: Archetype): JsValue = {
+      Json.obj(
+        "groupId" -> a.groupId,
+        "artifactId" -> a.artifactId,
+        "version" -> a.version,
+        "description" -> a.description,
+        "repository" -> a.repository,
+        "javaVersion" -> a.javaVersion
+      )
+    }
+  }
+  
+//  implicit val userWrites: Writes[Archetype] = (
+//    Writes.pruned and
+//    (JsPath \ "groupId").write[Double] and
+//    (JsPath \ "long").write[Double]
+//  )(unlift(Archetype.unapply))
+  /*implicit object ArchetypeFormat extends Format[Archetype] {
     def reads(json: JsValue): JsResult[Archetype] = JsSuccess(Archetype(
-      (json \ "id").asOpt[Long],
-      (json \ "groupId").as[String],
-      (json \ "artifactId").as[String],
-      (json \ "version").as[String],
-      (json \ "description").asOpt[String],
-      (json \ "repository").asOpt[String],
-      (json \ "localDir").asOpt[String]
+      (json \ "id").asOpt[Long] and
+      (json \ "groupId").as[String] and
+      (json \ "artifactId").as[String] and
+      (json \ "version").as[String] and
+      (json \ "description").asOpt[String] and
+      (json \ "repository").asOpt[String] and
+      Reads.pure(None) and
+      Reads.pure(None) and
+      Reads.pure(None)
     ))
     def writes(a: Archetype): JsValue = JsObject(List(
       "groupId" -> JsString(a.groupId),
@@ -92,6 +132,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       "repository" -> JsString(a.repository.getOrElse(""))
     ))
   }
+  */
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
     Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description)))
@@ -176,15 +217,10 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       NoContent
     } else {
       Logger.debug("Generating metadata...")
-      val archetypeContent = archetypesService.loadArchetypeContent(archetype)
-      if (archetypeContent.isDefined) {
-        val newArchetype = Archetype(archetype.id, archetype.groupId, archetype.artifactId, archetype.version, archetype.description, archetype.repository, Some(archetypeContent.get.contentBasePath))
-        archetypesService.safe(newArchetype)
-        Logger.debug("done...")
-        NoContent
-      } else {
-        NotFound
-      }
+      val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+      archetypesService.safe(loadedArchetype)
+      Logger.debug("done...")
+      NoContent
     }
   }
 }

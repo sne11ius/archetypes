@@ -33,17 +33,25 @@
 	  </div>
 	  <div id="list-container">
 	    <table>
-	    <col width="5%">
-	    <col width="15%">
-	    <col width="20%">
 	    <col width="10%">
-	    <col width="50%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
+	    <col width="10%">
 	    <tr>
 	      <th class="details"></th>
 	      <th class="groupId">groupId</th>
 	      <th class="artifactId">artifactId</th>
 	      <th class="version">version</th>
 	      <th class="description">description</th>
+	      <th class="repository">repository</th>
+	      <th class="javaVersion">javaVersion</th>
+	      <th class="localDir">localDir</th>
+	      <th class="generateLog">generateLog</th>
 	    </tr>
 	    @for(archetype <- archetypes) {
 	      <tr>
@@ -52,6 +60,10 @@
 	        <td class="artifactId">@archetype.artifactId</td>
 	        <td class="version">@archetype.version</td>
 	        <td class="description">@archetype.description</td>
+	        <td class="repository">@archetype.repository</td>
+	        <td class="javaVersion">@archetype.javaVersion</td>
+	        <td class="localDir">@archetype.localDir</td>
+	        <td class="generateLog">@Html(archetype.generateLog.getOrElse(""))</td>
 	      </tr>
 	    }
 	    </table>
