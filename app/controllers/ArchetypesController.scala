@@ -24,14 +24,14 @@ import models.Archetype
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
-  def reimportArchetypes = DBAction { implicit rs =>
-    var newArchetypes = archetypesService.loadFromAllCatalogs
-    Logger.debug(s"${newArchetypes.size} archetypes loaded.")
-    Logger.debug("Adding to database...")
-    archetypesService.addAll(newArchetypes)
-    Logger.debug("...done")
-    NoContent
-  }
+//  def reimportArchetypes = DBAction { implicit rs =>
+//    var newArchetypes = archetypesService.loadFromAllCatalogs
+//    Logger.debug(s"${newArchetypes.size} archetypes loaded.")
+//    Logger.debug("Adding to database...")
+//    archetypesService.addAll(newArchetypes)
+//    Logger.debug("...done")
+//    NoContent
+//  }
   
   /*
   def archetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
@@ -51,7 +51,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       val fileTree = filename match {
         case None => {
           if (loadedArchetype.localDir.isDefined)
-            Some(DirToHtml.toHtml(new File(loadedArchetype.localDir.get)))
+            Some(DirToHtml.toHtml(new File(loadedArchetype.localDir.get, "example-app")))
           else
             None
         }
@@ -61,15 +61,15 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
             case Some(dir) => {
               val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, None).absoluteURL(current.configuration.getBoolean("https").get);
               val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
-              val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir), file)
-              Some(DirToHtml.toHtml(new File(dir), file, hrefTemplate))
+              val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir, "example-app"), file)
+              Some(DirToHtml.toHtml(new File(dir, "example-app"), file, hrefTemplate))
             }
           }
         }
       }
       val fileSource = 
         if (filename.isDefined && loadedArchetype.localDir.isDefined) {
-          Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get), filename.get))
+          Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get, "example-app"), filename.get))
         } else {
           None
         }
