@@ -182,11 +182,15 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         javaVersion = ((xml \ "properties" \ property) text)
       }
       Logger.debug(s"Java version: $javaVersion")
-      javaVersion
+      if ("" == javaVersion) {
+        "[default]"
+      } else {
+        javaVersion
+      }
     } catch {
       case e: Exception => {
         Logger.debug(s"Cannot parse $file: ${e getMessage}")
-        "1.4"
+        "[default]"
       }
     }
   }

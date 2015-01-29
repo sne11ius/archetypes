@@ -74,6 +74,9 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
                 val property = javaVersion.drop(2).dropRight(1)
                 javaVersion = ((xml \ "properties" \ property) text)
               }
+              if ("" == javaVersion) {
+                javaVersion = "[default]"
+              }
         		  Logger.debug(s"Java version: $javaVersion")
               archetypesService.safe(archetype.copy(javaVersion = Some(javaVersion)))
             } catch {
