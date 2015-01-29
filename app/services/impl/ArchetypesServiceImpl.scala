@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import models.MavenGenerateResult
 import models.MavenGenerateResult
+import scala.xml.XML
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
@@ -116,20 +117,8 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       archetype.version
     ).mkString(File.separator)
   }
-  /*
-  http://www.wenda.io/questions/151281/scala-process-capture-standard-out-and-exit-code.html
-    private def runCommand(cmd: Seq[String]): (Int, String, String) = {
-      val stdout = new ByteArrayOutputStream
-      val stderr = new ByteArrayOutputStream
-      val stdoutWriter = new PrintWriter(stdout)
-      val stderrWriter = new PrintWriter(stderr)
-      val exitValue = cmd.!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
-      stdoutWriter.close()
-      stderrWriter.close()
-      (exitValue, stdout.toString, stderr.toString)
-    }
-  */
-  private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
+  
+    private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
     Logger.debug(s"Creating $baseDir")
     if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
@@ -146,6 +135,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
           s"-DgroupId=$groupId",
           s"-DartifactId=$artifactId",
           "-DprojectName=ExampleProject",
+          "-projectDescription=ExampleDescription",
           "-DnewProjectName=ExampleProject",
           "-DmoduleName=ExampleModule",
           "-Dmodule=ExampleModule",
@@ -166,39 +156,38 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       Logger.debug(s"baseDir: $baseDir")
       archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
         case MavenGenerateResult(0, stdout) => {
-          Archetype(
-            archetype.id,
-            archetype.groupId,
-            archetype.artifactId,
-            archetype.version,
-            archetype.description,
-            archetype.repository,
-            Some(extractJavaVersion(baseDir)),
-            Some(baseDir),
-            Some(stdout)
+          archetype.copy(
+            javaVersion = Some(extractJavaVersion(baseDir)),
+            localDir = Some(baseDir),
+            generateLog = Some(stdout)
           )
         }
         case MavenGenerateResult(_, stdout) => {
-          Archetype(
-            archetype.id,
-            archetype.groupId,
-            archetype.artifactId,
-            archetype.version,
-            archetype.description,
-            archetype.repository,
-            None,
-            None,
-            Some(stdout)
+          archetype.copy(
+              generateLog = Some(stdout)
           )
         }
       }
-      //Logger.debug(s"Fully loaded archetype: $loadedArchetype")
-      //safe(loadedArchetype)
-      //loadedArchetype
     }
   }
   
   private def extractJavaVersion(baseDir: String): String = {
-    "1.4"
+    val file = new File(new File(baseDir, "example-app"), "pom.xml")
+    try {
+      val xml = XML.loadFile(file)
+      var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
+      if (javaVersion.contains("$")) {
+        Logger.debug(s"We need to go deeper for $file")
+        val property = javaVersion.drop(2).dropRight(1)
+        javaVersion = ((xml \ "properties" \ property) text)
+      }
+      Logger.debug(s"Java version: $javaVersion")
+      javaVersion
+    } catch {
+      case e: Exception => {
+        Logger.debug(s"Cannot parse $file: ${e getMessage}")
+        "1.4"
+      }
+    }
   }
 }
