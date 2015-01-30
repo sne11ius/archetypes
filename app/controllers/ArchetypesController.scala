@@ -106,33 +106,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       )
     }
   }
-  
-//  implicit val userWrites: Writes[Archetype] = (
-//    Writes.pruned and
-//    (JsPath \ "groupId").write[Double] and
-//    (JsPath \ "long").write[Double]
-//  )(unlift(Archetype.unapply))
-  /*implicit object ArchetypeFormat extends Format[Archetype] {
-    def reads(json: JsValue): JsResult[Archetype] = JsSuccess(Archetype(
-      (json \ "id").asOpt[Long] and
-      (json \ "groupId").as[String] and
-      (json \ "artifactId").as[String] and
-      (json \ "version").as[String] and
-      (json \ "description").asOpt[String] and
-      (json \ "repository").asOpt[String] and
-      Reads.pure(None) and
-      Reads.pure(None) and
-      Reads.pure(None)
-    ))
-    def writes(a: Archetype): JsValue = JsObject(List(
-      "groupId" -> JsString(a.groupId),
-      "artifactId" -> JsString(a.artifactId),
-      "version" -> JsString(a.version),
-      "description" -> JsString(a.description.getOrElse("")),
-      "repository" -> JsString(a.repository.getOrElse(""))
-    ))
-  }
-  */
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
     Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description, None)))
