@@ -190,7 +190,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
   
   def getFile(groupId: String, artifactId: String, version: String, file: String) = DBAction { implicit rs =>
     if (file.contains("..")) {
-      Logger.error(s"Tried to browse relativa parent dir: $file");
+      Logger.error(s"Tried to browse relative parent dir: $file");
       NotFound
     } else {
       val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
@@ -201,7 +201,8 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         } else {
           val downloadFile = new File(archetype.localDir.get, file)
           Logger.debug("Downloading: " + downloadFile.toString())
-          Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
+          Ok.sendFile(downloadFile)//, inline, fileName, onClose)(new FileInputStream(downloadFile))
+          //Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
         }
       } else {
         NotFound
