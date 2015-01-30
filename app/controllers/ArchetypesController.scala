@@ -1,44 +1,31 @@
 package controllers
 
-import play.api.Play.current
-import play.api._
-import play.api.mvc._
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
-import javax.inject.Inject
-import services.ArchetypesService
-import play.api.db.slick.DBAction
-import play.api.libs.json.Json
-import models.Archetype
-import play.api.data._
-import play.api.data.Forms._
 import java.io.File
 import java.util.Arrays
-import org.apache.commons.io.IOUtils
-import java.io.FileInputStream
+import javax.inject.Inject
+import models.Archetype
+import models.Archetype
+import models.Archetype
+import models.FileDescriptor
+import models.Text
+import models.Image
+import models.Binary
+import play.api._
+import play.api.Play.current
+import play.api.data._
+import play.api.data.Forms._
+import play.api.db.slick.DBAction
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+import play.api.libs.json.Json
+import play.api.mvc._
+import services.ArchetypesService
+import services.SourcePrettifyService
 import views.forms.search.ArchetypeSearch._
 import nu.wasis.dir2html.DirToHtml
-import services.SourcePrettifyService
-import models.Archetype
-import models.Archetype
+import eu.medsea.mimeutil.MimeUtil
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
-  
-//  def reimportArchetypes = DBAction { implicit rs =>
-//    var newArchetypes = archetypesService.loadFromAllCatalogs
-//    Logger.debug(s"${newArchetypes.size} archetypes loaded.")
-//    Logger.debug("Adding to database...")
-//    archetypesService.addAll(newArchetypes)
-//    Logger.debug("...done")
-//    NoContent
-//  }
-  
-  /*
-  def archetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
-    val archetypes = archetypesService.find(groupId, artifactId, version, description)
-    Ok(views.html.index(archetypes))
-  }
-  */
   
   def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
     val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion))
@@ -59,7 +46,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           loadedArchetype.localDir match {
             case None => None
             case Some(dir) => {
-              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion, None).absoluteURL(current.configuration.getBoolean("https").get);
+              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion, None).absoluteURL(current.configuration.getBoolean("https").get)
               val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
               val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir, "example-app"), file)
               Some(DirToHtml.toHtml(new File(dir, "example-app"), file, hrefTemplate))
@@ -67,18 +54,45 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           }
         }
       }
-      val fileSource = 
+      val file = 
         if (filename.isDefined && loadedArchetype.localDir.isDefined) {
-          Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get, "example-app"), filename.get))
+          Some(mkFileDescriptor(archetype, new File(loadedArchetype.localDir.get, "example-app"), filename.get))//Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get, "example-app"), filename.get))
         } else {
           None
         }
       //Logger.debug(s"$fileSource")
       //Logger.debug(s"filename: $filename")
-      Ok(views.html.archetypeDetails(archetype, searchData, fileTree, fileSource))
+      Ok(views.html.archetypeDetails(archetype, searchData, fileTree, file))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
+    }
+  }
+  
+  private def mkFileDescriptor(archetype: Archetype, baseDir: File, filename: String)(implicit request: RequestHeader): FileDescriptor = {
+    val file = new File(baseDir, filename)
+    if (!file.exists) {
+      Logger.error(s"File does not exist: $file")
+    }
+    Logger.debug(s"Detecting $file...")
+    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
+    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
+    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
+    
+    val mimeTypes = MimeUtil.getMimeTypes(file)
+    val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
+    Logger.debug(s"MimeType: $mimeType")
+    // MimeUtil.isTextMimeType does not work :/
+    val textTypes = List("xml", "x-javascript", "x-markdown", "sql")
+    if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType)) {
+      Logger.debug("... text")
+      Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
+    } else if ("image" == mimeType.getMediaType) {
+      Logger.debug("... image")
+      Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+    } else {
+      Logger.debug("... binary")
+      Binary(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
     }
   }
 
@@ -172,7 +186,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         if (archetype.localDir.isEmpty) {
           NotFound
         } else {
-          val downloadFile = new File(archetype.localDir.get, file)
+          val downloadFile = new File(new File(archetype.localDir.get, "example-app"), file)
           Logger.debug("Downloading: " + downloadFile.toString())
           Ok.sendFile(downloadFile)//, inline, fileName, onClose)(new FileInputStream(downloadFile))
           //Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))

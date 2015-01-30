@@ -1,6 +1,6 @@
 @import views.forms.search.ArchetypeSearch._
 
-@(archetype: Archetype, searchData: Option[SearchData], fileTree: Option[String], fileSource: Option[String])
+@(archetype: Archetype, searchData: Option[SearchData], fileTree: Option[String], file: Option[FileDescriptor])
 
 @main("wasis.nu/mit/archetypes?") {
 
@@ -55,7 +55,25 @@
           @Html(fileTree.getOrElse("[no file browser available]"))
 		    </div>
 		    <div id="file-content">
-		      @Html(fileSource.getOrElse("[no file content available]"))
+		      @* @Html(fileSource.getOrElse("[no file content available]")) *@
+		      @file match {
+					  case Some(descriptor) => {
+					    @descriptor match {
+					      case Text(text) => {
+					        @Html(text)
+					      }
+					      case Image(src) => {
+					        <img src="@src">
+					      }
+					      case Binary(href) => {
+					        This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
+					      }
+					    }
+					  }
+					  case None => {
+					    [no file content available]
+					  }
+				  }
 		    </div>
 	    </div>
     </div>

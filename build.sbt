@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "org.apache.maven" % "maven-artifact" % "3.2.5",
   "commons-io" % "commons-io" % "2.4",
   "com.mohiva" %% "play-html-compressor" % "0.4-SNAPSHOT",
+  "eu.medsea.mimeutil" % "mime-util" % "2.1.3",
   cache,
   ws,
   filters
