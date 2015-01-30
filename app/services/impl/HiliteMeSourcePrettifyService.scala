@@ -2,19 +2,18 @@ package services.impl
 
 import java.io.File
 import java.io.FileInputStream
-
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
-
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
-
 import javax.inject.Inject
 import play.api.Play.current
 import play.api.libs.ws.WS
 import services.SourcePrettifyService
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.StringEscapeUtils
 
 class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
 
@@ -33,7 +32,7 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
           if (200 == response.status) {
             response.body
           } else {
-            source.replace("\n", "<br>")
+            StringEscapeUtils.escapeHtml4(source).replace("\n", "<br>")
           }
         }, 10 seconds)
     }

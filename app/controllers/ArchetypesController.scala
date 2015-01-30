@@ -24,6 +24,8 @@ import services.SourcePrettifyService
 import views.forms.search.ArchetypeSearch._
 import nu.wasis.dir2html.DirToHtml
 import eu.medsea.mimeutil.MimeUtil
+import org.apache.commons.io.FilenameUtils
+import java.util.Locale
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
@@ -81,10 +83,12 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     
     val mimeTypes = MimeUtil.getMimeTypes(file)
     val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
+    val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
     Logger.debug(s"MimeType: $mimeType")
+    //Logger.debug(s"Extension: $extension")
     // MimeUtil.isTextMimeType does not work :/
-    val textTypes = List("xml", "x-javascript", "x-markdown", "sql")
-    if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType)) {
+    val textTypes = List("xml", "x-javascript", "x-markdown", "sql", "jsf", "prefs", "factorypath", "mf")
+    if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension)) {
       Logger.debug("... text")
       Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
     } else if ("image" == mimeType.getMediaType) {
