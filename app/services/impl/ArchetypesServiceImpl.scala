@@ -1,34 +1,43 @@
 package services.impl
 
-import play.api.Play.current
-import extensions.MyScalaExtensions._
-import scala.concurrent.duration._
-import collection.JavaConversions._
-import play.api.Logger
-import services.ArchetypesService
-import play.api.libs.ws.WS
-import models.Archetype
-import scala.concurrent.Future
-import scala.concurrent.Await
-import javax.inject.Inject
-import models.daos.ArchetypeDao
-import org.apache.maven.artifact.versioning.ComparableVersion
-import scala.sys.process._
 import java.io.File
-import java.io.FileInputStream
-import org.apache.commons.io.IOUtils
-import models.Archetype
-import models.Archetype
-import models.MavenGenerateResult
-import java.io.ByteArrayOutputStream
-import java.io.PrintWriter
-import models.MavenGenerateResult
-import models.MavenGenerateResult
+import java.util.Locale
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
+import scala.language.implicitConversions
+import scala.language.postfixOps
+import scala.sys.process.BasicIO
+import scala.sys.process.Process
 import scala.xml.XML
+
+import org.apache.maven.artifact.versioning.ComparableVersion
+
+import extensions.MyScalaExtensions.ExtendedNodeSeq
+import javax.inject.Inject
+import models.Archetype
+import models.MavenGenerateResult
+import models.daos.ArchetypeDao
+import play.api.Logger
+import play.api.Play.current
+import play.api.libs.ws.WS
+import services.ArchetypesService
 
 class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
+  
+  private def rootDir: String = {
+    val osString = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+    val WinMatcher = "win"r
+    val result = osString match {
+      case WinMatcher(_) => current.configuration.getString("tempDirWindows").get
+      case _ => current.configuration.getString("tempDir").get
+    }
+    //Logger.debug(s"Base directory: $result")
+    result
+  }
   
   override def loadFromAllCatalogs: List[Archetype] = {
     current.configuration.getStringList("archetypes.catalogs").map(_.toList).get.flatMap { url =>
@@ -143,7 +152,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         s"-DgroupId=$groupId",
         s"-DartifactId=$artifactId",
         "-DprojectName=ExampleProject",
-        "-projectDescription=ExampleDescription",
+        //"-projectDescription=ExampleDescription",
         "-DnewProjectName=ExampleProject",
         "-DmoduleName=ExampleModule",
         "-Dmodule=ExampleModule",
@@ -156,7 +165,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   }
   
   override def loadArchetypeContent(archetype: Archetype): Archetype = {
-    val baseDir = buildFilename(current.configuration.getString("tempDir").get, archetype)
+    val baseDir = buildFilename(rootDir, archetype)
     if (archetype.localDir.isDefined) {
       Logger.debug(s"localDir already defined as: ${archetype.localDir}")
       archetype

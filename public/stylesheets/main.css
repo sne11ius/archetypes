@@ -69,6 +69,7 @@ h1 {
 
 .form-line input[type="submit"] {
  	border: 1px solid white;
+ 	width: 178px;
 }
 
 .form-line input[readonly] {

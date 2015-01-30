@@ -1,23 +1,24 @@
-import play.api._
+import java.io.File
+
+import scala.annotation.implicitNotFound
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
+import scala.xml.XML
+
+import com.google.inject.Guice
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor
+import com.mohiva.play.htmlcompressor.HTMLCompressorFilter
+import com.mohiva.play.xmlcompressor.XMLCompressorFilter
+
+import play.api.Application
+import play.api.Logger
 import play.api.Play.current
-import play.api.mvc._
-import com.google.inject.{Guice, AbstractModule}
-import play.api.GlobalSettings
-import services.impl.ArchetypesServiceImpl
+import play.api.libs.concurrent.Akka
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.mvc.WithFilters
+import play.filters.gzip.GzipFilter
 import services.ArchetypesService
 import util.ArchetypesModule
-import com.mohiva.play.htmlcompressor.HTMLCompressorFilter
-import com.googlecode.htmlcompressor.compressor.HtmlCompressor
-import com.mohiva.play.xmlcompressor.XMLCompressorFilter
-import play.filters.gzip.GzipFilter
-import play.api.libs.concurrent.Execution.Implicits._
-import play.api.libs.concurrent.Akka
-import scala.concurrent.duration._
-import services.ArchetypesService
-import services.impl.ArchetypesServiceImpl
-import java.io.File
-import scala.xml.XML
-import org.xml.sax.SAXParseException
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -27,8 +28,8 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   val archetypesService = injector.getInstance(classOf[ArchetypesService])
   
   override def onStart(app: Application) {
-    //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
-    Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
+    Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
   }
   
   def updateArchetypes = {
@@ -41,7 +42,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug("...done")
     val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
     Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
-    Logger.debug("Generating metainfo...")
+    Logger.debug("Generating projects...")
     newestArchetypes.zipWithIndex.foreach {
       case (archetype, index) => {
         Logger.debug(s"${index + 1}/${newestArchetypes.length} -> Generating $archetype")

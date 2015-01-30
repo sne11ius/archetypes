@@ -1,18 +1,20 @@
 package services.impl
 
-import services.SourcePrettifyService
-import javax.inject.Inject
-import scala.concurrent.Await
-import play.api.libs.ws.WS
-import play.api.Play.current
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import java.io.File
-import models.Archetype
-import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
+
 import org.apache.commons.io.FilenameUtils
-import play.api.Logger
+import org.apache.commons.io.IOUtils
+
+import javax.inject.Inject
+import play.api.Play.current
+import play.api.libs.ws.WS
+import services.SourcePrettifyService
 
 class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
 

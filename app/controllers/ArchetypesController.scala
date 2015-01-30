@@ -156,20 +156,20 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
               dir += "/";
           }
           dir = java.net.URLDecoder.decode(dir, "UTF-8");
-          val baseDir = new File(archetype.localDir.get, dir)
+          val archetypeLocalDir = new File(archetype.localDir.get, dir)
           Logger.debug("browsing: " + dir)
-          Logger.debug("mapped to: " + baseDir)
-          if (baseDir.exists()) {
-            val files = baseDir.list
+          Logger.debug("mapped to: " + archetypeLocalDir)
+          if (archetypeLocalDir.exists()) {
+            val files = archetypeLocalDir.list
             Arrays.sort(files, String.CASE_INSENSITIVE_ORDER)
             var result = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
             for (file <- files) {
-              if (new File(baseDir, file).isDirectory()) {
+              if (new File(archetypeLocalDir, file).isDirectory()) {
                 result += "<li class=\"directory collapsed\"><a href=\"#\" rel=\"" + dir + file + "/\">" + file + "</a></li>"
               }
             }
             for (file <- files) {
-              if (!new File(baseDir, file).isDirectory()) {
+              if (!new File(archetypeLocalDir, file).isDirectory()) {
                 val dotIndex = file.lastIndexOf('.')
                 val ext =  if (dotIndex > 0) file.substring(dotIndex + 1) else ""
                 result += "<li class=\"file ext_" + ext + "\"><a href=\"#\" rel=\"" + dir + file + "\">" + file + "</a></li>"
