@@ -46,8 +46,8 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     if (1 <= archetypes.size) {
       val archetype = archetypes.head
       val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
-      Logger.debug(s"Loaded archetype: $loadedArchetype")
-      Logger.debug(s"basepath: ${archetype.localDir}")
+      //Logger.debug(s"Loaded archetype: $loadedArchetype")
+      //Logger.debug(s"basepath: ${archetype.localDir}")
       val fileTree = filename match {
         case None => {
           if (loadedArchetype.localDir.isDefined)
@@ -74,7 +74,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           None
         }
       //Logger.debug(s"$fileSource")
-      Logger.debug(s"filename: $filename")
+      //Logger.debug(s"filename: $filename")
       Ok(views.html.archetypeDetails(archetype, searchData, fileTree, fileSource))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
