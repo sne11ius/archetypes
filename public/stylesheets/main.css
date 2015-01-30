@@ -55,12 +55,16 @@ h1 {
 	text-align: right;
 }
 
-.form-line input {
+.form-line input, .form-line select {
 	width: 170px;
 	border: 1px solid #cdcdcd;
 	border-radius: 3px;
   padding-left: 4px;
   padding-right: 4px;
+}
+
+.form-line select {
+	width: 179px;
 }
 
 .form-line input[type="submit"] {

@@ -19,14 +19,14 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
   def index() = DBAction { implicit rs =>
     archetypeSearchForm.bindFromRequest.fold(
       formWithErrors => {
-        val searchData = SearchData(None, None, None, None)
+        val searchData = SearchData(None, None, None, None, None)
         BadRequest(views.html.index(formWithErrors, List(), None, searchData, 0))
       },
       searchData => {
         Logger.debug(s"Search data: $searchData")
         val start = Form("start" -> text).bindFromRequest.fold( hasErrors => { 0 }, value => { value.toInt } )
         val numItems = Form("numItems" -> text).bindFromRequest.fold( hasErrors => { 200 }, value => { value.toInt } )
-        val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, searchData.version, searchData.description)
+        val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion)
         val numArchetypes = archetypes.length
         val numPages = ((numArchetypes:Float) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)

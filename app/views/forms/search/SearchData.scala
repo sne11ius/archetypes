@@ -9,7 +9,8 @@ object ArchetypeSearch {
     groupId: Option[String],
     artifactId: Option[String],
     version: Option[String],
-    description: Option[String]
+    description: Option[String],
+    javaVersion: Option[String]
   )
   
   val archetypeSearchForm = Form(
@@ -17,7 +18,8 @@ object ArchetypeSearch {
       "groupId"     -> optional(text),
       "artifactId"  -> optional(text),
       "version"     -> optional(text),
-      "description" -> optional(text)
+      "description" -> optional(text),
+      "javaVersion" -> optional(text)
     )(SearchData.apply)(SearchData.unapply)
   )
 }

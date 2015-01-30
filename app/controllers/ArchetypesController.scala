@@ -40,9 +40,9 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
   }
   */
   
-  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], filename: Option[String]) = DBAction { implicit rs =>
-    val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription))
-    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None);
+  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
+    val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion))
+    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None);
     if (1 <= archetypes.size) {
       val archetype = archetypes.head
       val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
@@ -59,7 +59,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           loadedArchetype.localDir match {
             case None => None
             case Some(dir) => {
-              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, None).absoluteURL(current.configuration.getBoolean("https").get);
+              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion, None).absoluteURL(current.configuration.getBoolean("https").get);
               val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
               val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir, "example-app"), file)
               Some(DirToHtml.toHtml(new File(dir, "example-app"), file, hrefTemplate))
@@ -135,11 +135,11 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
   */
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
-    Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description)))
+    Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description, None)))
   }
   
   def browse(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
-    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
     if (!archetypes.isEmpty) {
       val archetype = archetypes.head
       if (archetype.localDir.isEmpty) {
@@ -193,7 +193,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       Logger.error(s"Tried to browse relativa parent dir: $file");
       NotFound
     } else {
-      val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None)
+      val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
       if (!archetypes.isEmpty) {
         val archetype = archetypes.head
         if (archetype.localDir.isEmpty) {
@@ -211,7 +211,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
   
   def loadMetaData(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
     Logger.debug(s"Loading for $groupId, $artifactId, $version")
-    val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None).head;
+    val archetype = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None).head;
     if (archetype.localDir.isDefined) {
       Logger.debug("Metadata already generated...")
       NoContent

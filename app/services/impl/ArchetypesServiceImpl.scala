@@ -62,7 +62,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypsDao.safe(archetype)
   }
   
-  override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]): List[Archetype] = {
+  override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String], javaVersion: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
     val allArchetypes = archetypsDao.findAll
     //Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
@@ -89,6 +89,12 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     }.filter { a =>
       if (version.isDefined && version.get != "newest") {
         a.version.toLowerCase().contains(version.get.toLowerCase)
+      } else {
+        true
+      }
+    }.filter { a =>
+      if (javaVersion.isDefined) {
+        a.javaVersion == javaVersion
       } else {
         true
       }
@@ -182,6 +188,9 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         javaVersion = ((xml \ "properties" \ property) text)
       }
       Logger.debug(s"Java version: $javaVersion")
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
+      }
       if ("" == javaVersion) {
         "[default]"
       } else {

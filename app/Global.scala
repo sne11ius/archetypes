@@ -27,7 +27,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   val archetypesService = injector.getInstance(classOf[ArchetypesService])
   
   override def onStart(app: Application) {
-    Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
   }
   
@@ -39,7 +39,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug("Adding to database...")
     archetypesService.addAll(newArchetypes)
     Logger.debug("...done")
-    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None)
+    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
     Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
     Logger.debug("Generating metainfo...")
     newestArchetypes.zipWithIndex.foreach {
@@ -54,7 +54,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   }
   
   def updateJavaVersions = {
-    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None)
+    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
     Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
     Logger.debug("Generating java versions...")
     newestArchetypes.zipWithIndex.foreach {
@@ -73,6 +73,9 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
                 Logger.debug(s"We need to go deeper for $dir")
                 val property = javaVersion.drop(2).dropRight(1)
                 javaVersion = ((xml \ "properties" \ property) text)
+              }
+              if ("" == javaVersion) {
+                javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
               }
               if ("" == javaVersion) {
                 javaVersion = "[default]"
