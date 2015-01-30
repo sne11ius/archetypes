@@ -126,30 +126,32 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   
     private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
     Logger.debug(s"Creating $baseDir")
+    new File(baseDir).delete()
     if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
       MavenGenerateResult(-1, s"Cannot create base directory: $baseDir")
     } else {
       val sb = new StringBuffer
       val process = Process((new java.lang.ProcessBuilder(
-        "C:\\Users\\coli\\Documents\\bin\\apache-maven-3.0.5\\bin\\mvn.bat",
+        //"C:\\Users\\coli\\Documents\\bin\\apache-maven-3.0.5\\bin\\mvn.bat",
+        "mvn",
         "archetype:generate",
-          "-DinteractiveMode=false",
-          s"-DarchetypeGroupId=${archetype.groupId}",
-          s"-DarchetypeArtifactId=${archetype.artifactId}",
-          s"-DarchetypeVersion=${archetype.version}",
-          s"-DgroupId=$groupId",
-          s"-DartifactId=$artifactId",
-          "-DprojectName=ExampleProject",
-          "-projectDescription=ExampleDescription",
-          "-DnewProjectName=ExampleProject",
-          "-DmoduleName=ExampleModule",
-          "-Dmodule=ExampleModule",
-          "-DwebContextPath=TestWebContextPath",
-          "-DgaeApplicationName=TestGaeApplicationName"
+        "-DinteractiveMode=false",
+        s"-DarchetypeGroupId=${archetype.groupId}",
+        s"-DarchetypeArtifactId=${archetype.artifactId}",
+        s"-DarchetypeVersion=${archetype.version}",
+        s"-DgroupId=$groupId",
+        s"-DartifactId=$artifactId",
+        "-DprojectName=ExampleProject",
+        "-projectDescription=ExampleDescription",
+        "-DnewProjectName=ExampleProject",
+        "-DmoduleName=ExampleModule",
+        "-Dmodule=ExampleModule",
+        "-DwebContextPath=TestWebContextPath",
+        "-DgaeApplicationName=TestGaeApplicationName"
       )) directory new File(baseDir))
       val exitValue = process.run(BasicIO(false, sb, None)).exitValue
-      MavenGenerateResult(exitValue, sb.toString)
+      MavenGenerateResult(exitValue, sb.toString.replace(baseDir, "").replace("\\", "/"))
     }
   }
   
