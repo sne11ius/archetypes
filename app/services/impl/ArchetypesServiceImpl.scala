@@ -71,6 +71,10 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     archetypsDao.safe(archetype)
   }
   
+  override def findBy(ex: Archetype): Option[Archetype] = {
+    archetypsDao.findBy(ex)
+  }
+  
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String], javaVersion: Option[String]): List[Archetype] = {
     // This will be slow as hell, but I cannot slick, so...
     val allArchetypes = archetypsDao.findAll
@@ -133,7 +137,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     ).mkString(File.separator)
   }
   
-    private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
+  private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
     Logger.debug(s"Creating $baseDir")
     new File(baseDir).delete()
     if (!(new File(baseDir).mkdirs())) {
@@ -164,26 +168,33 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
     }
   }
   
-  override def loadArchetypeContent(archetype: Archetype): Archetype = {
-    val baseDir = buildFilename(rootDir, archetype)
-    if (archetype.localDir.isDefined) {
-      Logger.debug(s"localDir already defined as: ${archetype.localDir}")
-      archetype
-    } else {
-      Logger.debug(s"baseDir: $baseDir")
-      archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
-        case MavenGenerateResult(0, stdout) => {
-          archetype.copy(
-            javaVersion = Some(extractJavaVersion(baseDir)),
-            localDir = Some(baseDir),
-            generateLog = Some(stdout)
-          )
+  override def loadArchetypeContent(externArchetype: Archetype): Archetype = {
+    findBy(externArchetype) match {
+      case Some(archetype) => {
+        val baseDir = buildFilename(rootDir, archetype)
+        if (archetype.localDir.isDefined) {
+          Logger.debug(s"localDir already defined as: ${archetype.localDir}")
+          archetype
+        } else {
+          Logger.debug(s"baseDir: $baseDir")
+          archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
+            case MavenGenerateResult(0, stdout) => {
+              archetype.copy(
+                javaVersion = Some(extractJavaVersion(baseDir)),
+                localDir = Some(baseDir),
+                generateLog = Some(stdout)
+              )
+            }
+            case MavenGenerateResult(_, stdout) => {
+              archetype.copy(
+                  generateLog = Some(stdout)
+              )
+            }
+          }
         }
-        case MavenGenerateResult(_, stdout) => {
-          archetype.copy(
-              generateLog = Some(stdout)
-          )
-        }
+      }
+      case None => {
+        throw new RuntimeException(s"Cannot load content for unknown archetype: $externArchetype")
       }
     }
   }

@@ -36,6 +36,29 @@ class ArchetypeDaoSlick extends ArchetypeDao {
       }
     }
   }
+  
+  override def findBy(ex: Archetype): Option[Archetype] = {
+    DB withSession { implicit session =>
+      archetypes.filter( a => {a.groupId === ex.groupId && a.artifactId === ex.artifactId && a.version === ex.version}).firstOption match {
+        case Some(found) => {
+          Some(Archetype(
+            found.id,
+            found.groupId,
+            found.artifactId,
+            found.version,
+            found.description,
+            found.repository,
+            found.javaVersion,
+            found.localDir,
+            found.generateLog
+          ))
+        }
+        case None => {
+          None
+        }
+      }
+    }
+  }
 
   override def findAll: List[Archetype] = {
     DB withSession { implicit session =>
