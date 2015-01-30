@@ -26,7 +26,7 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
         Logger.debug(s"Search data: $searchData")
         val start = Form("start" -> text).bindFromRequest.fold( hasErrors => { 0 }, value => { value.toInt } )
         val numItems = Form("numItems" -> text).bindFromRequest.fold( hasErrors => { 200 }, value => { value.toInt } )
-        val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion)
+        val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, Some(searchData.version.getOrElse("newest")), searchData.description, searchData.javaVersion)
         val numArchetypes = archetypes.length
         val numPages = ((numArchetypes:Float) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)
