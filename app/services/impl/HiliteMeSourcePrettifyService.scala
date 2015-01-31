@@ -14,28 +14,27 @@ import play.api.libs.ws.WS
 import services.SourcePrettifyService
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringEscapeUtils
+import org.pegdown.PegDownProcessor
+import org.pegdown.Extensions.ALL
+import play.api.Logger
 
 class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
 
   def toPrettyHtml(baseDir: File, file: String): String = {
     val localFile = new File(baseDir, file)
     val source = IOUtils.toString(new FileInputStream(localFile))
-    if ("" == source) {
-      "[empty file]"
-    } else {
-      val lexer = FilenameUtils.getExtension(localFile.toString())
-      Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
-          "code" -> Seq(source),
-          "linenos" -> Seq("yes, i want line numbers"),
-          "lexer" -> Seq(lexer)
-        )).map { response =>
-          if (200 == response.status) {
-            response.body
-          } else {
-            StringEscapeUtils.escapeHtml4(source).replace("\n", "<br>")
-          }
-        }, 10 seconds)
-    }
+    val lexer = FilenameUtils.getExtension(localFile.toString())
+    Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
+        "code" -> Seq(source),
+        "linenos" -> Seq("yes, i want line numbers"),
+        "lexer" -> Seq(lexer)
+      )).map { response =>
+        if (200 == response.status) {
+          response.body
+        } else {
+          StringEscapeUtils.escapeHtml4(source).replace("\n", "<br>")
+        }
+      }, 10 seconds)
   }
   
 }

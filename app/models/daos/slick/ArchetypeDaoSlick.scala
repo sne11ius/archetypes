@@ -21,8 +21,10 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         a.description,
         a.repository,
         a.javaVersion,
+        a.packaging,
         a.localDir,
-        a.generateLog
+        a.generateLog,
+        a.additionalProps
       )
       archetypes.filter(_.id === dbArchetype.id).firstOption match {
         case Some(archetypeFound) => archetypes.filter(_.id === dbArchetype.id).update(dbArchetype)
@@ -49,8 +51,10 @@ class ArchetypeDaoSlick extends ArchetypeDao {
             found.description,
             found.repository,
             found.javaVersion,
+            found.packaging,
             found.localDir,
-            found.generateLog
+            found.generateLog,
+            found.additionalProps
           ))
         }
         case None => {
@@ -70,8 +74,10 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         a.description,
         a.repository,
         a.javaVersion,
+        a.packaging,
         a.localDir,
-        a.generateLog
+        a.generateLog,
+        a.additionalProps
       )}
     }
   }

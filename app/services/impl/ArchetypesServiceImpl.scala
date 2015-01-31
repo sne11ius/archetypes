@@ -2,7 +2,6 @@ package services.impl
 
 import java.io.File
 import java.util.Locale
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
@@ -11,9 +10,7 @@ import scala.language.postfixOps
 import scala.sys.process.BasicIO
 import scala.sys.process.Process
 import scala.xml.XML
-
 import org.apache.maven.artifact.versioning.ComparableVersion
-
 import extensions.MyScalaExtensions.ExtendedNodeSeq
 import javax.inject.Inject
 import models.Archetype
@@ -23,8 +20,10 @@ import play.api.Logger
 import play.api.Play.current
 import play.api.libs.ws.WS
 import services.ArchetypesService
+import scala.sys.process.ProcessBuilder
+import scala.util.matching._
 
-class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends ArchetypesService {
+class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
   
@@ -52,7 +51,9 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
             (a \ "repository").textOption,
             None,
             None,
-            None
+            None,
+            None,
+            List()
           )
         }
       }, 10 seconds)
@@ -60,26 +61,34 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   }
   
   override def findAll: List[Archetype] = {
-    archetypsDao.findAll
+    archetypesDao.findAll
   }
 
-  override def addAll(archetypes: List[Archetype]) = {
-    archetypes.map { archetypsDao.safe }
+  override def addAllNew(archetypes: List[Archetype]) = {
+    Logger.warn("addAllNew will only add _new_ archetypes")
+    archetypes.map { a =>
+      findBy(a) match {
+        case None => {
+          archetypesDao.safe(a)
+        }
+        case _ => {}
+      }
+    }
   }
   
   override def safe(archetype: Archetype): Unit = {
-    archetypsDao.safe(archetype)
+    archetypesDao.safe(archetype)
   }
   
   override def findBy(ex: Archetype): Option[Archetype] = {
-    archetypsDao.findBy(ex)
+    archetypesDao.findBy(ex)
   }
   
   override def find(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String], javaVersion: Option[String]): List[Archetype] = {
-    // This will be slow as hell, but I cannot slick, so...
-    val allArchetypes = archetypsDao.findAll
+    //This will be slow as hell, but I cannot slick, so...
+    val allArchetypes = archetypesDao.findAll
     //Logger.debug(s"Total # archetypes: ${allArchetypes.size}")
-    val archetypes = archetypsDao.findAll.filter { a =>
+    val archetypes = archetypesDao.findAll.filter { a =>
       if (groupId.isDefined) {
         a.groupId.toLowerCase().contains(groupId.get.toLowerCase)
       } else {
@@ -138,15 +147,57 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
   }
   
   private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
-    Logger.debug(s"Creating $baseDir")
+    // Logger.debug(s"Creating $baseDir")
     new File(baseDir).delete()
     if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
-      MavenGenerateResult(-1, s"Cannot create base directory: $baseDir")
+      MavenGenerateResult(-1, s"Cannot create base directory: $baseDir", List[String]())
     } else {
       val sb = new StringBuffer
-      val process = Process((new java.lang.ProcessBuilder(
-        //"C:\\Users\\coli\\Documents\\bin\\apache-maven-3.0.5\\bin\\mvn.bat",
+      val process = makeProcess(archetype, groupId, artifactId, baseDir, List())
+      var exitValue = process.run(BasicIO(false, sb, None)).exitValue
+      var additionalProps = List[String]();
+      if (0 != exitValue) {
+        val log = sb.toString
+        val props = extractAdditionalProps(log)
+        if (!props.isEmpty) {
+          sb.setLength(0)
+          Logger.debug(s"Retrying with additional props: $props")
+          val process = makeProcess(archetype, groupId, artifactId, baseDir, props)
+          exitValue = process.run(BasicIO(false, sb, None)).exitValue
+          if (0 == exitValue) {
+            additionalProps = props
+          }
+        }
+      }
+      MavenGenerateResult(exitValue, sb.toString.replace(baseDir, "").replace("\\", "/"), additionalProps)
+    }
+  }
+  
+  private def makeProcess(archetype: Archetype, groupId: String, artifactId: String, baseDir: String, additionalProps: List[String]): ProcessBuilder = {
+    val propsString = if (additionalProps.isEmpty) {
+      ""
+    } else {
+      additionalProps.map( p => {
+        "-D" + p + "=Example" + p.take(1).toUpperCase(Locale.ENGLISH) + p.drop(1)
+      }).mkString(" ")
+    }
+    propsString match {
+      case "" => {
+        Process((new java.lang.ProcessBuilder(
+          "mvn",
+          "archetype:generate",
+          "-DinteractiveMode=false",
+          s"-DarchetypeGroupId=${archetype.groupId}",
+          s"-DarchetypeArtifactId=${archetype.artifactId}",
+          s"-DarchetypeVersion=${archetype.version}",
+          s"-DgroupId=$groupId",
+          s"-DartifactId=$artifactId",
+          "-DprojectName=ExampleProject"
+        )) directory new File(baseDir))
+      }
+      case props => {
+        Process((new java.lang.ProcessBuilder(
         "mvn",
         "archetype:generate",
         "-DinteractiveMode=false",
@@ -156,16 +207,15 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         s"-DgroupId=$groupId",
         s"-DartifactId=$artifactId",
         "-DprojectName=ExampleProject",
-        //"-projectDescription=ExampleDescription",
-        "-DnewProjectName=ExampleProject",
-        "-DmoduleName=ExampleModule",
-        "-Dmodule=ExampleModule",
-        "-DwebContextPath=TestWebContextPath",
-        "-DgaeApplicationName=TestGaeApplicationName"
+        props
       )) directory new File(baseDir))
-      val exitValue = process.run(BasicIO(false, sb, None)).exitValue
-      MavenGenerateResult(exitValue, sb.toString.replace(baseDir, "").replace("\\", "/"))
+      }
     }
+  }
+  
+  private def extractAdditionalProps(errorLog: String): List[String] = {
+    val matcher = "(\\[ERROR\\] Property )(.*)( is missing.)"r: Regex
+    matcher.findAllIn(errorLog).matchData.map ( m => m.group(2) ).toList.filter(s => !s.contains(",") && !s.contains(" "))
   }
   
   override def loadArchetypeContent(externArchetype: Archetype): Archetype = {
@@ -176,16 +226,21 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
           Logger.debug(s"localDir already defined as: ${archetype.localDir}")
           archetype
         } else {
-          Logger.debug(s"baseDir: $baseDir")
+          // Logger.debug(s"baseDir: $baseDir")
           archetypeGenerate(archetype, "com.example", "example-app", baseDir) match {
-            case MavenGenerateResult(0, stdout) => {
+            case MavenGenerateResult(0, stdout, additionalProps) => {
+              //Logger.debug(stdout)
+              //Logger.debug(additionalProps.toString)
               archetype.copy(
                 javaVersion = Some(extractJavaVersion(baseDir)),
+                packaging = Some(extractPackaging(baseDir)),
                 localDir = Some(baseDir),
-                generateLog = Some(stdout)
+                generateLog = Some(stdout),
+                additionalProps = additionalProps
               )
             }
-            case MavenGenerateResult(_, stdout) => {
+            case MavenGenerateResult(_, stdout, _) => {
+              //Logger.error(stdout)
               archetype.copy(
                   generateLog = Some(stdout)
               )
@@ -194,6 +249,7 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
         }
       }
       case None => {
+        Logger.error(s"Not found: $externArchetype")
         throw new RuntimeException(s"Cannot load content for unknown archetype: $externArchetype")
       }
     }
@@ -205,11 +261,11 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       val xml = XML.loadFile(file)
       var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
       if (javaVersion.contains("$")) {
-        Logger.debug(s"We need to go deeper for $file")
+        //Logger.debug(s"We need to go deeper for $file")
         val property = javaVersion.drop(2).dropRight(1)
         javaVersion = ((xml \ "properties" \ property) text)
       }
-      Logger.debug(s"Java version: $javaVersion")
+      //Logger.debug(s"Java version: $javaVersion")
       if ("" == javaVersion) {
         javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
       }
@@ -222,6 +278,23 @@ class ArchetypesServiceImpl @Inject() (archetypsDao: ArchetypeDao) extends Arche
       case e: Exception => {
         Logger.debug(s"Cannot parse $file: ${e getMessage}")
         "[default]"
+      }
+    }
+  }
+  
+  private def extractPackaging(baseDir: String): String = {
+    val file = new File(new File(baseDir, "example-app"), "pom.xml")
+    try {
+      val xml = XML.loadFile(file)
+      var packaging = ((xml \ "packaging") text)
+      if ("" == packaging) {
+        packaging = "jar"
+      }
+      packaging
+    } catch {
+      case e: Exception => {
+        Logger.debug(s"Cannot parse $file: ${e getMessage}")
+        "jar"
       }
     }
   }

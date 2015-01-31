@@ -18,6 +18,7 @@ libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4",
   "com.mohiva" %% "play-html-compressor" % "0.4-SNAPSHOT",
   "eu.medsea.mimeutil" % "mime-util" % "2.1.3",
+  "org.pegdown" % "pegdown" % "1.4.2",
   cache,
   ws,
   filters

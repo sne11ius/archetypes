@@ -4,12 +4,12 @@ import java.io.File
 import java.util.Arrays
 import javax.inject.Inject
 import models.Archetype
-import models.Archetype
-import models.Archetype
 import models.FileDescriptor
 import models.Text
 import models.Image
 import models.Binary
+import models.Empty
+import models.Markdown
 import play.api._
 import play.api.Play.current
 import play.api.data._
@@ -26,6 +26,10 @@ import nu.wasis.dir2html.DirToHtml
 import eu.medsea.mimeutil.MimeUtil
 import org.apache.commons.io.FilenameUtils
 import java.util.Locale
+import org.pegdown.PegDownProcessor
+import org.pegdown.Extensions.ALL
+import org.apache.commons.io.IOUtils
+import java.io.FileInputStream
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
@@ -58,7 +62,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       }
       val file = 
         if (filename.isDefined && loadedArchetype.localDir.isDefined) {
-          Some(mkFileDescriptor(archetype, new File(loadedArchetype.localDir.get, "example-app"), filename.get))//Some(sourcePrettifyService.toPrettyHtml(new File(loadedArchetype.localDir.get, "example-app"), filename.get))
+          Some(mkFileDescriptor(archetype, new File(loadedArchetype.localDir.get, "example-app"), filename.get))
         } else {
           None
         }
@@ -76,27 +80,35 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     if (!file.exists) {
       Logger.error(s"File does not exist: $file")
     }
-    Logger.debug(s"Detecting $file...")
-    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
-    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
-    MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
-    
-    val mimeTypes = MimeUtil.getMimeTypes(file)
-    val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
-    val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
-    Logger.debug(s"MimeType: $mimeType")
-    //Logger.debug(s"Extension: $extension")
-    // MimeUtil.isTextMimeType does not work :/
-    val textTypes = List("xml", "x-javascript", "x-markdown", "sql", "jsf", "prefs", "factorypath", "mf")
-    if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension)) {
-      Logger.debug("... text")
-      Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
-    } else if ("image" == mimeType.getMediaType) {
-      Logger.debug("... image")
-      Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+    if (0 == file.length()) {
+      Empty
     } else {
-      Logger.debug("... binary")
-      Binary(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+      Logger.debug(s"Detecting $file...")
+      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
+      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
+      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
+      
+      val mimeTypes = MimeUtil.getMimeTypes(file)
+      val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
+      val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
+      val simplename = FilenameUtils.getBaseName(filename.toLowerCase(Locale.ENGLISH))
+      Logger.debug(s"MimeType: $mimeType")
+      //Logger.debug(s"Extension: $extension")
+      // MimeUtil.isTextMimeType does not work :/
+      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd")
+      if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
+        Logger.debug("... text")
+        Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
+      } else if ("x-markdown" == mimeType.getSubType) {
+    	  val source = IOUtils.toString(new FileInputStream(file))
+        Markdown(new PegDownProcessor(ALL).markdownToHtml(source))
+      } else if ("image" == mimeType.getMediaType) {
+        Logger.debug("... image")
+        Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+      } else {
+        Logger.debug("... binary")
+        Binary(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+      }
     }
   }
 
@@ -108,8 +120,10 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     (__ \ "description").readNullable[String] and
     (__ \ "repository").readNullable[String] and
     (__ \ "javaVersion").readNullable[String] and
+    (__ \ "packaging").readNullable[String] and
     Reads.pure(None) and
-    Reads.pure(None)
+    Reads.pure(None) and
+    (__ \ "additionalProps").read[List[String]]
   )(Archetype)
   
   implicit val userWrites = new Writes[Archetype] {
@@ -120,63 +134,15 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         "version" -> a.version,
         "description" -> a.description,
         "repository" -> a.repository,
-        "javaVersion" -> a.javaVersion
+        "javaVersion" -> a.javaVersion,
+        "packaging" -> a.packaging,
+        "additionalProps" -> a.additionalProps
       )
     }
   }
 
   def restArchetypes(groupId: Option[String], artifactId: Option[String], version: Option[String], description: Option[String]) = DBAction { implicit rs =>
     Ok(Json.toJson(archetypesService.find(groupId, artifactId, version, description, None)))
-  }
-  
-  def browse(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
-    val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
-    if (!archetypes.isEmpty) {
-      val archetype = archetypes.head
-      if (archetype.localDir.isEmpty) {
-        NotFound
-      } else {
-        var dir = Form("dir" -> text).bindFromRequest.get
-        if (dir.contains("..")) {
-          Logger.error(s"Tried to browse relativa parent dir: $dir");
-          NotFound
-        } else {
-          if (dir.charAt(dir.length()-1) == '\\') {
-              dir = dir.substring(0, dir.length()-1) + "/";
-          } else if (dir.charAt(dir.length()-1) != '/') {
-              dir += "/";
-          }
-          dir = java.net.URLDecoder.decode(dir, "UTF-8");
-          val archetypeLocalDir = new File(archetype.localDir.get, dir)
-          Logger.debug("browsing: " + dir)
-          Logger.debug("mapped to: " + archetypeLocalDir)
-          if (archetypeLocalDir.exists()) {
-            val files = archetypeLocalDir.list
-            Arrays.sort(files, String.CASE_INSENSITIVE_ORDER)
-            var result = "<ul class=\"jqueryFileTree\" style=\"display: none;\">"
-            for (file <- files) {
-              if (new File(archetypeLocalDir, file).isDirectory()) {
-                result += "<li class=\"directory collapsed\"><a href=\"#\" rel=\"" + dir + file + "/\">" + file + "</a></li>"
-              }
-            }
-            for (file <- files) {
-              if (!new File(archetypeLocalDir, file).isDirectory()) {
-                val dotIndex = file.lastIndexOf('.')
-                val ext =  if (dotIndex > 0) file.substring(dotIndex + 1) else ""
-                result += "<li class=\"file ext_" + ext + "\"><a href=\"#\" rel=\"" + dir + file + "\">" + file + "</a></li>"
-              }
-            }
-            result += "</ul"
-            // Logger.debug(s"Result: $result")
-            Ok(result)
-          } else {
-            NotFound
-          }
-        }
-      }
-    } else {
-      NotFound
-    }
   }
   
   def getFile(groupId: String, artifactId: String, version: String, file: String) = DBAction { implicit rs =>

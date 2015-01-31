@@ -1,15 +1,12 @@
 import java.io.File
-
 import scala.annotation.implicitNotFound
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.xml.XML
-
 import com.google.inject.Guice
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor
 import com.mohiva.play.htmlcompressor.HTMLCompressorFilter
 import com.mohiva.play.xmlcompressor.XMLCompressorFilter
-
 import play.api.Application
 import play.api.Logger
 import play.api.Play.current
@@ -19,6 +16,9 @@ import play.api.mvc.WithFilters
 import play.filters.gzip.GzipFilter
 import services.ArchetypesService
 import util.ArchetypesModule
+import models.Archetype
+import org.apache.maven.artifact.versioning.ComparableVersion
+import scala.language.implicitConversions
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -29,16 +29,25 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   
   override def onStart(app: Application) {
     Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
-    //Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
+  }
+    
+  implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
+
+  def newest(all: List[Archetype]): List[Archetype] = {
+    all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
+      case ((groupId, artifactId), list) => {
+        list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
+      }
+    }.toList
   }
   
   def updateArchetypes = {
     Logger.debug("Updating database...")
     Logger.debug("Loading archetypes...")
-    var newArchetypes = archetypesService.loadFromAllCatalogs
+    val newArchetypes = newest(archetypesService.loadFromAllCatalogs)
     Logger.debug(s"${newArchetypes.size} archetypes loaded.")
     Logger.debug("Adding to database...")
-    archetypesService.addAll(newArchetypes)
+    archetypesService.addAllNew(newArchetypes)
     Logger.debug("...done")
     val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
     Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
@@ -50,46 +59,6 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
         // Logger.debug(s"Maven log:")
         // Logger.debug(s"${loadedArchetype.generateLog}");
         archetypesService.safe(loadedArchetype)
-      }
-    }
-  }
-  
-  def updateJavaVersions = {
-    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
-    Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
-    Logger.debug("Generating java versions...")
-    newestArchetypes.zipWithIndex.foreach {
-      case (archetype, index) => {
-        archetype.localDir match {
-          case None => {
-            Logger.debug(s"${index + 1}/${newestArchetypes.length} -> Skipping archetype. No generated Project yet.");
-          }
-          case Some(dir) => {
-        	Logger.debug(s"${index + 1}/${newestArchetypes.length} -> Generating java version...")
-            val file = new File(new File(dir, "example-app"), "pom.xml")
-        	try {
-              val xml = XML.loadFile(file)
-              var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
-              if (javaVersion.contains("$")) {
-                Logger.debug(s"We need to go deeper for $dir")
-                val property = javaVersion.drop(2).dropRight(1)
-                javaVersion = ((xml \ "properties" \ property) text)
-              }
-              if ("" == javaVersion) {
-                javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
-              }
-              if ("" == javaVersion) {
-                javaVersion = "[default]"
-              }
-        		  Logger.debug(s"Java version: $javaVersion")
-              archetypesService.safe(archetype.copy(javaVersion = Some(javaVersion)))
-            } catch {
-              case e: Exception => {
-                Logger.debug(s"Cannot parse $file: ${e getMessage}")
-              }
-            }
-          }
-        }
       }
     }
   }

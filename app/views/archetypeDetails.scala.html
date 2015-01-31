@@ -20,19 +20,31 @@
       <div class="line">
         <label for="groupId">groupId:</label>
         <span id="groupId">@archetype.groupId</span>
-       </div>
+      </div>
       <div class="line">
         <label for="artifactId">artifactId:</label>
         <span id="artifactId">@archetype.artifactId</span>
-       </div>
+      </div>
       <div class="line">
         <label for="version">version:</label>
         <span id="version">@archetype.version</span>
-       </div>
+      </div>
       <div class="line">
         <label for="description">description:</label>
         <span id="description">@archetype.description</span>
-       </div>
+      </div>
+      <div class="line">
+        <label for="javaVersion">java version:</label>
+        <span id="javaVersion">@archetype.javaVersion</span>
+      </div>
+      <div class="line">
+        <label for="packaging">packaging:</label>
+        <span id="packaging">@archetype.packaging</span>
+      </div>
+      <div class="line">
+        <label for="additionalProps">additional props:</label>
+        <span id="additionalProps">@archetype.additionalProps</span>
+      </div>
     </div>
     Command:
     <div class="details-overview-container" style="width: 90%">
@@ -59,9 +71,15 @@
 		      @file match {
 					  case Some(descriptor) => {
 					    @descriptor match {
-					      case Text(text) => {
-					        @Html(text)
+					      case Empty => {
+					        [This file is empty]
 					      }
+                case Text(text) => {
+                  @Html(text)
+                }
+                case Markdown(html) => {
+                  @Html(html)
+                }
 					      case Image(src) => {
 					        <img src="@src">
 					      }

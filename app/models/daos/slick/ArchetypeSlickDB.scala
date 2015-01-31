@@ -6,6 +6,12 @@ import play.api.db.slick._
 import play.api.db.slick.Config.driver.simple._
 
 object ArchetypeSlickDB {
+  
+  implicit val stringListMapper = MappedColumnType.base[List[String],String](
+    list => list.mkString(","),
+    string => string.split(',').toList
+  )
+  
   case class DBArchetype (
     id: Option[Long],
     groupId: String,
@@ -14,8 +20,10 @@ object ArchetypeSlickDB {
     description: Option[String],
     repository: Option[String],
     javaVersion: Option[String],
+    packaging: Option[String],
     localDir: Option[String],
-    generateLog: Option[String]
+    generateLog: Option[String],
+    additionalProps: List[String]
   )
   
   class Archetypes(tag: Tag) extends Table[DBArchetype](tag, "archetype") {
@@ -26,9 +34,11 @@ object ArchetypeSlickDB {
     def description = column[Option[String]]("description", O.DBType("LONGTEXT"))
     def repository = column[Option[String]]("repository")
     def javaVersion = column[Option[String]]("javaVersion")
+    def packaging = column[Option[String]]("packaging")
     def localDir = column[Option[String]]("localDir")
     def generateLog = column[Option[String]]("generateLog", O.DBType("LONGTEXT"))
-    def * = (id.?, groupId, artifactId, version, description, repository, javaVersion, localDir, generateLog) <> (DBArchetype.tupled, DBArchetype.unapply)
+    def additionalProps = column[List[String]]("additionalProps", O.DBType("LONGTEXT"))
+    def * = (id.?, groupId, artifactId, version, description, repository, javaVersion, packaging, localDir, generateLog, additionalProps) <> (DBArchetype.tupled, DBArchetype.unapply)
     
     def idx = index("idx_a", (groupId, artifactId, version), unique = true)
   }

@@ -2,5 +2,6 @@ package models
 
 case class MavenGenerateResult (
   exitValue: Int,
-  stdout: String
+  stdout: String,
+  additionalProps: List[String]
 )
