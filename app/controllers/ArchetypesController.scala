@@ -95,13 +95,14 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       Logger.debug(s"MimeType: $mimeType")
       //Logger.debug(s"Extension: $extension")
       // MimeUtil.isTextMimeType does not work :/
-      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd")
-      if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
+      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as")
+      if ("x-markdown" == mimeType.getSubType) {
+        val source = IOUtils.toString(new FileInputStream(file))
+        Logger.debug("... markdown")
+        Markdown(new PegDownProcessor(ALL).markdownToHtml(source))
+      } else if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
         Logger.debug("... text")
         Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
-      } else if ("x-markdown" == mimeType.getSubType) {
-    	  val source = IOUtils.toString(new FileInputStream(file))
-        Markdown(new PegDownProcessor(ALL).markdownToHtml(source))
       } else if ("image" == mimeType.getMediaType) {
         Logger.debug("... image")
         Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
