@@ -65,6 +65,7 @@ h1 {
 
 .form-line select {
 	width: 179px;
+	background-color: white;
 }
 
 .form-line input[type="submit"] {
