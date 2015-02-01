@@ -33,33 +33,35 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
 
-  def newest(all: List[Archetype]): List[Archetype] = {
+  def newest(all: List[Archetype]): List[Archetype] = newestBut(all, 0)
+  
+  def newestBut(all: List[Archetype], but: Int): List[Archetype] = {
     all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
       case ((groupId, artifactId), list) => {
-        list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
+        list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).drop(but).take(1)
       }
     }.toList
   }
   
   def updateArchetypes = {
-    Logger.debug("Updating database...")
-    Logger.debug("Loading archetypes...")
-    val newArchetypes = newest(archetypesService.loadFromAllCatalogs)
-    Logger.debug(s"${newArchetypes.size} archetypes loaded.")
-    Logger.debug("Adding to database...")
-    archetypesService.addAllNew(newArchetypes)
-    Logger.debug("...done")
-    val newestArchetypes = archetypesService.find(None, None, Some("newest"), None, None)
-    Logger.debug(s"${newestArchetypes.length} 'newest' archetypes")
-    Logger.debug("Generating projects...")
-    newestArchetypes.zipWithIndex.foreach {
-      case (archetype, index) => {
-        Logger.debug(s"${index + 1}/${newestArchetypes.length} -> Generating $archetype")
-        val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
-        // Logger.debug(s"Maven log:")
-        // Logger.debug(s"${loadedArchetype.generateLog}");
-        archetypesService.safe(loadedArchetype)
+    var but = 0
+    var archetypes = newestBut(archetypesService.loadFromAllCatalogs, but)
+    while (!archetypes.isEmpty) {
+      Logger.debug(s"Importing ${ archetypes.size } `newest - $but' archetypes.")
+      Logger.debug("Adding to database...")
+      archetypesService.addAllNew(archetypes)
+      Logger.debug("...done")
+      Logger.debug("Generating details...")
+      archetypes.zipWithIndex.foreach {
+        case (archetype, index) => {
+          Logger.debug(s"${index + 1}/${archetypes.length} -> Generating $archetype")
+          val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+          archetypesService.safe(loadedArchetype)
+        }
       }
+      Logger.debug("...done")
+      but += 1;
+      archetypes = newestBut(archetypesService.loadFromAllCatalogs, but)
     }
   }
 }
