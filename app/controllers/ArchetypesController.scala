@@ -99,7 +99,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       if ("x-markdown" == mimeType.getSubType) {
         val source = IOUtils.toString(new FileInputStream(file))
         Logger.debug("... markdown")
-        Markdown(new PegDownProcessor(ALL).markdownToHtml(source))
+        Markdown(new PegDownProcessor(ALL).markdownToHtml(source.trim))
       } else if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
         Logger.debug("... text")
         Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
