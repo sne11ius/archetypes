@@ -2,15 +2,21 @@ package services.impl
 
 import java.io.File
 import java.util.Locale
+
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import scala.language.implicitConversions
 import scala.language.postfixOps
 import scala.sys.process.BasicIO
 import scala.sys.process.Process
+import scala.sys.process.ProcessBuilder
+import scala.util.matching.Regex
 import scala.xml.XML
+
 import org.apache.maven.artifact.versioning.ComparableVersion
+
 import extensions.MyScalaExtensions.ExtendedNodeSeq
 import javax.inject.Inject
 import models.Archetype
@@ -20,9 +26,7 @@ import play.api.Logger
 import play.api.Play.current
 import play.api.libs.ws.WS
 import services.ArchetypesService
-import scala.sys.process.ProcessBuilder
-import scala.util.matching._
-
+  
 class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends ArchetypesService {
   
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -166,7 +170,11 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
           val process = makeProcess(archetype, groupId, artifactId, baseDir, props)
           exitValue = process.run(BasicIO(false, sb, None)).exitValue
           if (0 == exitValue) {
+            Logger.debug("Fixed it.")
             additionalProps = props
+          } else {
+            Logger.debug("No hellp D:")
+            Logger.debug(sb.toString)
           }
         }
       }
@@ -175,42 +183,21 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
   }
   
   private def makeProcess(archetype: Archetype, groupId: String, artifactId: String, baseDir: String, additionalProps: List[String]): ProcessBuilder = {
-    val propsString = if (additionalProps.isEmpty) {
-      ""
-    } else {
-      additionalProps.map( p => {
-        "-D" + p + "=Example" + p.take(1).toUpperCase(Locale.ENGLISH) + p.drop(1)
-      }).mkString(" ")
-    }
-    propsString match {
-      case "" => {
-        Process((new java.lang.ProcessBuilder(
-          "mvn",
-          "archetype:generate",
-          "-DinteractiveMode=false",
-          s"-DarchetypeGroupId=${archetype.groupId}",
-          s"-DarchetypeArtifactId=${archetype.artifactId}",
-          s"-DarchetypeVersion=${archetype.version}",
-          s"-DgroupId=$groupId",
-          s"-DartifactId=$artifactId",
-          "-DprojectName=ExampleProject"
-        )) directory new File(baseDir))
-      }
-      case props => {
-        Process((new java.lang.ProcessBuilder(
-        "mvn",
-        "archetype:generate",
-        "-DinteractiveMode=false",
-        s"-DarchetypeGroupId=${archetype.groupId}",
-        s"-DarchetypeArtifactId=${archetype.artifactId}",
-        s"-DarchetypeVersion=${archetype.version}",
-        s"-DgroupId=$groupId",
-        s"-DartifactId=$artifactId",
-        "-DprojectName=ExampleProject",
-        props
-      )) directory new File(baseDir))
-      }
-    }
+    val propsList = additionalProps.map( p => {
+      "-D" + p + "=Example" + p.take(1).toUpperCase(Locale.ENGLISH) + p.drop(1)
+    })
+    val dafaultCmds = List[String](
+     "mvn",
+      "archetype:generate",
+      "-DinteractiveMode=false",
+      s"-DarchetypeGroupId=${archetype.groupId}",
+      s"-DarchetypeArtifactId=${archetype.artifactId}",
+      s"-DarchetypeVersion=${archetype.version}",
+      s"-DgroupId=$groupId",
+      s"-DartifactId=$artifactId",
+      "-DprojectName=ExampleProject"
+    )
+    Process((new java.lang.ProcessBuilder(dafaultCmds ++ propsList)) directory new File(baseDir))
   }
   
   private def extractAdditionalProps(errorLog: String): List[String] = {

@@ -40,13 +40,25 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       case ((groupId, artifactId), list) => {
         list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).drop(but).take(1)
       }
-    }.toList
+    }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
   }
   
   def updateArchetypes = {
+    var maxCycles = 0
+    val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
     var but = 0
-    var archetypes = newestBut(archetypesService.loadFromAllCatalogs, but)
+    
+    Logger.debug("Computing max cycles...")
+    var testArchetypes = newestBut(allArchetypes, maxCycles)
+    while (!testArchetypes.isEmpty) {
+      maxCycles += 1
+      testArchetypes = newestBut(allArchetypes, maxCycles)
+    }
+    Logger.debug(s"Max cycles: $maxCycles")
+    
+    var archetypes = newestBut(allArchetypes, but)
     while (!archetypes.isEmpty) {
+      Logger.debug(s"Cycle $but of $maxCycles")
       Logger.debug(s"Importing ${ archetypes.size } `newest - $but' archetypes.")
       Logger.debug("Adding to database...")
       archetypesService.addAllNew(archetypes)
@@ -54,9 +66,19 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       Logger.debug("Generating details...")
       archetypes.zipWithIndex.foreach {
         case (archetype, index) => {
-          Logger.debug(s"${index + 1}/${archetypes.length} -> Generating $archetype")
-          val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
-          archetypesService.safe(loadedArchetype)
+          val prefix = s"Cycle($but/$maxCycles) -> Archetype(${index + 1}/${archetypes.length})"
+          archetypesService.findBy(archetype) match {
+            case Some(a) => {
+              if (a.localDir.isDefined) {
+                Logger.debug(s"$prefix -> Archetype(${index + 1}/${archetypes.length}) -> Already generated -> skipping")
+              } else {
+                Logger.debug(s"$prefix -> Generating $archetype")
+                val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+                archetypesService.safe(loadedArchetype)
+              }
+            }
+            case None => {}
+          }
         }
       }
       Logger.debug("...done")
