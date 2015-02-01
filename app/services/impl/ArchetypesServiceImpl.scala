@@ -170,10 +170,10 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
           val process = makeProcess(archetype, groupId, artifactId, baseDir, props)
           exitValue = process.run(BasicIO(false, sb, None)).exitValue
           if (0 == exitValue) {
-            Logger.debug("Fixed it.")
+            //Logger.debug("Fixed it.")
             additionalProps = props
           } else {
-            Logger.debug("No hellp D:")
+            Logger.debug("No halp D:")
             Logger.debug(sb.toString)
           }
         }
