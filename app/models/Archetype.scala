@@ -1,5 +1,7 @@
 package models
 
+import org.joda.time.DateTime
+
 case class Archetype(
   id: Option[Long],
   groupId: String,
@@ -9,6 +11,7 @@ case class Archetype(
   repository: Option[String],
   javaVersion: Option[String],
   packaging: Option[String],
+  lastUpdated: DateTime,
   localDir: Option[String],
   generateLog: Option[String],
   additionalProps: List[String]

@@ -19,6 +19,12 @@ import util.ArchetypesModule
 import models.Archetype
 import org.apache.maven.artifact.versioning.ComparableVersion
 import scala.language.implicitConversions
+import org.jsoup.Jsoup
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormatter
+import org.joda.time.format.DateTimeFormatterBuilder
+import java.util.Locale
+import java.io.PrintWriter
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -29,6 +35,24 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   
   override def onStart(app: Application) {
     Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
+    //Logger.debug("newest: " + newest(archetypesService.findAll).drop(1).head.lastUpdated.toString)
+    //Logger.debug("initial: " + initial(archetypesService.findAll).drop(1).head.lastUpdated.toString)
+    
+//    Logger.debug("writing files...")
+//    var writer = new PrintWriter(new File("initial.csv"))
+//    writer.write("initial releases\n")
+//    initial(archetypesService.findAll).map { a =>
+//      writer.write(a.lastUpdated.toString + "\n")
+//    }
+//    writer.close()
+//    writer = new PrintWriter(new File("all.csv"))
+//    writer.write("all releases\n")
+//    archetypesService.findAll.map { a =>
+//      writer.write(a.lastUpdated.toString + "\n")
+//    }
+//    writer.close()
+//    Logger.debug("...done")
   }
     
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
@@ -37,10 +61,51 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   
   def newestBut(all: List[Archetype], but: Int): List[Archetype] = {
     all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
-      case ((groupId, artifactId), list) => {
+      case (_, list) => {
         list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).drop(but).take(1)
       }
     }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
+  }
+  
+  def initial(all: List[Archetype]): List[Archetype] = {
+    all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
+      case (_, list) => {
+        list.sortWith((a1, a2) => { 0 > a1.compareTo(a2) }).take(1)
+      }
+    }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
+  }
+  
+  def updateLastModified = {
+    Logger.debug("Updating lastModified...")
+    val allArchetypes = archetypesService.findAll
+    allArchetypes.zipWithIndex.foreach { e =>
+      val archetype = e._1
+      val index = e._2
+      if (0 != archetype.lastUpdated.getMillis) {
+        Logger.debug(s"$index/${ allArchetypes.length } -> Skipping")
+      } else {
+        Logger.debug(s"$index/${ allArchetypes.length } -> Updating")
+        val url = s"https://repo1.maven.org/maven2/${archetype.groupId.replace(".", "/")}/${archetype.artifactId}/${archetype.version}/"
+        val doc = Jsoup.connect(url).get();
+        val text = doc.select("pre").text
+        val matcher = "((([0-9])|([0-2][0-9])|([3][0-1]))\\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\-\\d{4} \\d{2}:\\d{2})"r
+        val dateString = matcher.findFirstIn(text).get
+        val formatter = new DateTimeFormatterBuilder()
+          .appendDayOfMonth(2)
+          .appendLiteral("-")
+          .appendMonthOfYearShortText()
+          .appendLiteral("-")
+          .appendYear(4, 4)
+          .appendLiteral(" ")
+          .appendHourOfDay(2)
+          .appendLiteral(":")
+          .appendMinuteOfHour(2)
+          .toFormatter().withLocale(Locale.ENGLISH)//"dd-mmm-yyyy hh:mm"
+        val date = DateTime.parse(dateString, formatter)
+        val newArchetype = archetype.copy(lastUpdated = date)
+        archetypesService.safe(newArchetype)
+      }
+    }
   }
   
   def updateArchetypes = {
@@ -70,10 +135,13 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
           archetypesService.findBy(archetype) match {
             case Some(a) => {
               if (a.localDir.isDefined) {
-                Logger.debug(s"$prefix -> Archetype(${index + 1}/${archetypes.length}) -> Already generated -> skipping")
+                //Logger.debug(s"$prefix -> Already generated -> skipping")
               } else {
-                Logger.debug(s"$prefix -> Generating $archetype")
+                //Logger.debug(s"$prefix -> Generating (${archetype.groupId}, ${archetype.artifactId}, ${archetype.version})")
                 val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+                if (loadedArchetype.localDir.isEmpty) {
+                  Logger.debug(loadedArchetype.toString)
+                }
                 archetypesService.safe(loadedArchetype)
               }
             }

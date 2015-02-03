@@ -30,6 +30,7 @@ import org.pegdown.PegDownProcessor
 import org.pegdown.Extensions.ALL
 import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
+import org.joda.time.DateTime
 
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
@@ -37,10 +38,11 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion))
     val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None);
     if (1 <= archetypes.size) {
-      val archetype = archetypes.head
-      val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
+      //val archetype = archetypes.head
+      //val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
       //Logger.debug(s"Loaded archetype: $loadedArchetype")
       //Logger.debug(s"basepath: ${archetype.localDir}")
+      val loadedArchetype = archetypes.head
       val fileTree = filename match {
         case None => {
           if (loadedArchetype.localDir.isDefined)
@@ -52,7 +54,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           loadedArchetype.localDir match {
             case None => None
             case Some(dir) => {
-              val absoluteUrl = routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion, None).absoluteURL(current.configuration.getBoolean("https").get)
+              val absoluteUrl = routes.ArchetypesController.archetypeDetails(loadedArchetype.groupId, loadedArchetype.artifactId, loadedArchetype.version, searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion, None).absoluteURL(current.configuration.getBoolean("https").get)
               val hrefTemplate = absoluteUrl + ((if (absoluteUrl.contains("?")) "&" else "?") + "file={file}")
               val fileSource = sourcePrettifyService.toPrettyHtml(new File(dir, "example-app"), file)
               Some(DirToHtml.toHtml(new File(dir, "example-app"), file, hrefTemplate))
@@ -62,13 +64,13 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       }
       val file = 
         if (filename.isDefined && loadedArchetype.localDir.isDefined) {
-          Some(mkFileDescriptor(archetype, new File(loadedArchetype.localDir.get, "example-app"), filename.get))
+          Some(mkFileDescriptor(loadedArchetype, new File(loadedArchetype.localDir.get, "example-app"), filename.get))
         } else {
           None
         }
       //Logger.debug(s"$fileSource")
       //Logger.debug(s"filename: $filename")
-      Ok(views.html.archetypeDetails(archetype, searchData, fileTree, file))
+      Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
@@ -95,7 +97,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       Logger.debug(s"MimeType: $mimeType")
       //Logger.debug(s"Extension: $extension")
       // MimeUtil.isTextMimeType does not work :/
-      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg")
+      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss")
       if ("x-markdown" == mimeType.getSubType) {
         val source = IOUtils.toString(new FileInputStream(file))
         Logger.debug("... markdown")
@@ -122,6 +124,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     (__ \ "repository").readNullable[String] and
     (__ \ "javaVersion").readNullable[String] and
     (__ \ "packaging").readNullable[String] and
+    (__ \ "lastUpdated").read[DateTime] and
     Reads.pure(None) and
     Reads.pure(None) and
     (__ \ "additionalProps").read[List[String]]
@@ -137,6 +140,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         "repository" -> a.repository,
         "javaVersion" -> a.javaVersion,
         "packaging" -> a.packaging,
+        "lastUpdated" -> a.lastUpdated,
         "additionalProps" -> a.additionalProps
       )
     }

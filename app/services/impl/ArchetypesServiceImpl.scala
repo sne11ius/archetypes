@@ -2,7 +2,6 @@ package services.impl
 
 import java.io.File
 import java.util.Locale
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConversions.seqAsJavaList
 import scala.concurrent.Await
@@ -14,9 +13,7 @@ import scala.sys.process.Process
 import scala.sys.process.ProcessBuilder
 import scala.util.matching.Regex
 import scala.xml.XML
-
 import org.apache.maven.artifact.versioning.ComparableVersion
-
 import extensions.MyScalaExtensions.ExtendedNodeSeq
 import javax.inject.Inject
 import models.Archetype
@@ -26,6 +23,11 @@ import play.api.Logger
 import play.api.Play.current
 import play.api.libs.ws.WS
 import services.ArchetypesService
+import org.joda.time.DateTime
+import org.jsoup.Jsoup
+import org.joda.time.format.DateTimeFormatterBuilder
+import org.apache.commons.io.IOUtils
+import org.apache.commons.io.FileUtils
   
 class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends ArchetypesService {
   
@@ -55,6 +57,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
             (a \ "repository").textOption,
             None,
             None,
+            new DateTime(0),
             None,
             None,
             List()
@@ -136,7 +139,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
         archetypes
       }
     //Logger.debug(s"Total # archetypes after filter: ${result.size}")
-    result
+    result.sortBy(a => (a.groupId, a.artifactId))
   }
   
   implicit def archetypeToComparableVersion(a: Archetype) : ComparableVersion = new ComparableVersion(a.version)
@@ -152,7 +155,12 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
   
   private def archetypeGenerate(archetype: Archetype, groupId: String, artifactId: String, baseDir: String): MavenGenerateResult = {
     // Logger.debug(s"Creating $baseDir")
-    new File(baseDir).delete()
+    val baseFile = new File(baseDir)
+    if (baseFile.exists()) {
+      Logger.debug(s"Deleting already existing base directory: $baseFile...")
+      FileUtils.deleteDirectory(baseFile)
+      Logger.debug("...done")
+    }
     if (!(new File(baseDir).mkdirs())) {
       Logger.error(s"Cannot mkdir: $baseDir")
       MavenGenerateResult(-1, s"Cannot create base directory: $baseDir", List[String]())
@@ -184,7 +192,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
   
   private def makeProcess(archetype: Archetype, groupId: String, artifactId: String, baseDir: String, additionalProps: List[String]): ProcessBuilder = {
     val propsList = additionalProps.map( p => {
-      "-D" + p + "=Example" + p.take(1).toUpperCase(Locale.ENGLISH) + p.drop(1)
+      "-D" + p + "=Example" + p.split("-").map(s => s.take(1).toUpperCase(Locale.ENGLISH) + s.drop(1)).mkString
     })
     val dafaultCmds = List[String](
      "mvn",
@@ -221,6 +229,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
               archetype.copy(
                 javaVersion = Some(extractJavaVersion(baseDir)),
                 packaging = Some(extractPackaging(baseDir)),
+                lastUpdated = getLastUpdated(archetype),
                 localDir = Some(baseDir),
                 generateLog = Some(stdout),
                 additionalProps = additionalProps
@@ -229,7 +238,8 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
             case MavenGenerateResult(_, stdout, _) => {
               //Logger.error(stdout)
               archetype.copy(
-                  generateLog = Some(stdout)
+                generateLog = Some(stdout),
+                lastUpdated = getLastUpdated(archetype)
               )
             }
           }
@@ -285,4 +295,27 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       }
     }
   }
+
+  private def getLastUpdated(archetype: Archetype): DateTime = {
+    val url = s"https://repo1.maven.org/maven2/${archetype.groupId.replace(".", "/")}/${archetype.artifactId}/${archetype.version}/"
+    val doc = Jsoup.connect(url).get();
+    val text = doc.select("pre").text
+    val matcher = "((([0-9])|([0-2][0-9])|([3][0-1]))\\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\-\\d{4} \\d{2}:\\d{2})"r
+    val dateString = matcher.findFirstIn(text).get
+    dateTimeFormatter.parseDateTime(dateString)
+  }
+
+  private val dateTimeFormatter = new DateTimeFormatterBuilder()
+      .appendDayOfMonth(2)
+      .appendLiteral("-")
+      .appendMonthOfYearShortText()
+      .appendLiteral("-")
+      .appendYear(4, 4)
+      .appendLiteral(" ")
+      .appendHourOfDay(2)
+      .appendLiteral(":")
+      .appendMinuteOfHour(2)
+      .toFormatter()
+      .withLocale(Locale.ENGLISH)//"dd-mmm-yyyy hh:mm"
+
 }

@@ -8,6 +8,7 @@ import models.daos.slick.ArchetypeSlickDB._
 import play.api.Play.current
 import play.api.Logger
 import models.Archetype
+import org.joda.time.DateTime
 
 class ArchetypeDaoSlick extends ArchetypeDao {
   
@@ -22,6 +23,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         a.repository,
         a.javaVersion,
         a.packaging,
+        a.lastUpdated.getMillis,
         a.localDir,
         a.generateLog,
         a.additionalProps
@@ -31,8 +33,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         case None => {
           archetypes.filter(dba => { dba.groupId === a.groupId && dba.artifactId === a.artifactId && dba.version === a.version}).firstOption match {
             case None => archetypes.insert(dbArchetype)
-            case Some(archetypeFound) => {
-            }
+            case Some(archetypeFound) => archetypes.filter(_.id === dbArchetype.id).update(dbArchetype)
           }
         }
       }
@@ -52,6 +53,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
             found.repository,
             found.javaVersion,
             found.packaging,
+            new DateTime(found.lastUpdated),
             found.localDir,
             found.generateLog,
             found.additionalProps
@@ -75,6 +77,7 @@ class ArchetypeDaoSlick extends ArchetypeDao {
         a.repository,
         a.javaVersion,
         a.packaging,
+        new DateTime(a.lastUpdated),
         a.localDir,
         a.generateLog,
         a.additionalProps

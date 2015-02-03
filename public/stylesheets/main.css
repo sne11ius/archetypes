@@ -136,6 +136,11 @@ th {
 	width: 245px;
 }
 
+pre {
+	text-align: left;
+	font-size: 13px;
+}
+
 #browser-container {
 	width: 90%;
 }

@@ -19,6 +19,10 @@ libraryDependencies ++= Seq(
   "com.mohiva" %% "play-html-compressor" % "0.4-SNAPSHOT",
   "eu.medsea.mimeutil" % "mime-util" % "2.1.3",
   "org.pegdown" % "pegdown" % "1.4.2",
+  "org.jsoup" % "jsoup" % "1.8.1",
+  "joda-time" % "joda-time" % "2.4",
+  "org.joda" % "joda-convert" % "1.6",
+  "com.github.tototoshi" %% "slick-joda-mapper" % "1.2.0",
   cache,
   ws,
   filters
