@@ -34,7 +34,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   val archetypesService = injector.getInstance(classOf[ArchetypesService])
   
   override def onStart(app: Application) {
-    Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
     //Logger.debug("newest: " + newest(archetypesService.findAll).drop(1).head.lastUpdated.toString)
     //Logger.debug("initial: " + initial(archetypesService.findAll).drop(1).head.lastUpdated.toString)
