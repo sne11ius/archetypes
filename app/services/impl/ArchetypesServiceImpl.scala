@@ -258,13 +258,21 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       val xml = XML.loadFile(file)
       var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
       if (javaVersion.contains("$")) {
-        //Logger.debug(s"We need to go deeper for $file")
         val property = javaVersion.drop(2).dropRight(1)
         javaVersion = ((xml \ "properties" \ property) text)
       }
-      //Logger.debug(s"Java version: $javaVersion")
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "build" \ "pluginManagement" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
+      }
+      if (javaVersion.contains("$")) {
+        val property = javaVersion.drop(2).dropRight(1)
+        javaVersion = ((xml \ "properties" \ property) text)
+      }
       if ("" == javaVersion) {
         javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
+      }
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "properties" \ "java.version") text)
       }
       if ("" == javaVersion) {
         "[default]"

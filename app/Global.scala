@@ -36,23 +36,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   override def onStart(app: Application) {
     //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
-    //Logger.debug("newest: " + newest(archetypesService.findAll).drop(1).head.lastUpdated.toString)
-    //Logger.debug("initial: " + initial(archetypesService.findAll).drop(1).head.lastUpdated.toString)
-    
-//    Logger.debug("writing files...")
-//    var writer = new PrintWriter(new File("initial.csv"))
-//    writer.write("initial releases\n")
-//    initial(archetypesService.findAll).map { a =>
-//      writer.write(a.lastUpdated.toString + "\n")
-//    }
-//    writer.close()
-//    writer = new PrintWriter(new File("all.csv"))
-//    writer.write("all releases\n")
-//    archetypesService.findAll.map { a =>
-//      writer.write(a.lastUpdated.toString + "\n")
-//    }
-//    writer.close()
-//    Logger.debug("...done")
+    Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
   }
     
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
@@ -152,6 +136,59 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       Logger.debug("...done")
       but += 1;
       archetypes = newestBut(archetypesService.loadFromAllCatalogs, but)
+    }
+  }
+  
+  def updateJavaVersions = {
+    Logger.debug("Updating java versions...")
+    val allArchetypes = archetypesService.findAll
+    allArchetypes.zipWithIndex.foreach { e =>
+      val archetype = e._1
+      val index = e._2
+      if ("[default]" != archetype.javaVersion.getOrElse("[default]") || archetype.localDir.isEmpty) {
+      } else {
+        val javaVersion = extractJavaVersion(archetype.localDir.get)
+        if (javaVersion != archetype.javaVersion.get) {
+          Logger.debug(s"Updated: ${archetype.javaVersion} -> $javaVersion for ${archetype.groupId} / ${archetype.artifactId} / ${archetype.version}")
+          archetypesService.safe(archetype.copy(javaVersion = Some(javaVersion)))
+        }
+      }
+    }
+    Logger.debug("...done")
+  }
+  
+  private def extractJavaVersion(baseDir: String): String = {
+    val file = new File(new File(baseDir, "example-app"), "pom.xml")
+    try {
+      val xml = XML.loadFile(file)
+      var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
+      if (javaVersion.contains("$")) {
+        val property = javaVersion.drop(2).dropRight(1)
+        javaVersion = ((xml \ "properties" \ property) text)
+      }
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "build" \ "pluginManagement" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
+      }
+      if (javaVersion.contains("$")) {
+        val property = javaVersion.drop(2).dropRight(1)
+        javaVersion = ((xml \ "properties" \ property) text)
+      }
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
+      }
+      if ("" == javaVersion) {
+        javaVersion = ((xml \ "properties" \ "java.version") text)
+      }
+      if ("" == javaVersion) {
+        "[default]"
+      } else {
+        javaVersion
+      }
+    } catch {
+      case e: Exception => {
+        Logger.error(s"Cannot parse $file: ${e getMessage}")
+        "[default]"
+      }
     }
   }
 }
