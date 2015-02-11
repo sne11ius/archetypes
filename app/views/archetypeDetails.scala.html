@@ -11,7 +11,7 @@
         <a href="@routes.Application.index">Back to search</a>
       }
       case Some(searchData) => {
-        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description">Back to search</a>
+        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion">Back to search</a>
       }
     }
     <br>
