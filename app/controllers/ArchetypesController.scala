@@ -98,7 +98,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         Logger.debug(s"MimeType: $mimeType")
         //Logger.debug(s"Extension: $extension")
         // MimeUtil.isTextMimeType does not work :/
-        val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto")
+        val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto", "pro", "desktop", "rb")
         val imageTypes = List("svg")
         if ("x-markdown" == mimeType.getSubType) {
           val source = IOUtils.toString(new FileInputStream(file))

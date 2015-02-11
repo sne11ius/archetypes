@@ -27,6 +27,8 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
               .replace("fxml", "xml")
               .replace("ftl", "html")
               .replace("mustache", "html")
+              .replace("classpath", "xml")
+              .replace("tmx", "xml")
     Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
         "code" -> Seq(source),
         "linenos" -> Seq("yes, i want line numbers"),
