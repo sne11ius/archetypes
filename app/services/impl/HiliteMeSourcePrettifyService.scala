@@ -24,6 +24,9 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
     val localFile = new File(baseDir, file)
     val source = IOUtils.toString(new FileInputStream(localFile))
     val lexer = FilenameUtils.getExtension(localFile.toString())
+              .replace("fxml", "xml")
+              .replace("ftl", "html")
+              .replace("mustache", "html")
     Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
         "code" -> Seq(source),
         "linenos" -> Seq("yes, i want line numbers"),

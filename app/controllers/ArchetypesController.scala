@@ -82,37 +82,43 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     if (!file.exists) {
       Logger.error(s"File does not exist: $file")
     }
-    if (0 == file.length()) {
-      Empty
-    } else {
-      Logger.debug(s"Detecting $file...")
-      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
-      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
-      MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
-      
-      val mimeTypes = MimeUtil.getMimeTypes(file)
-      val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
-      val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
-      val simplename = FilenameUtils.getBaseName(filename.toLowerCase(Locale.ENGLISH))
-      Logger.debug(s"MimeType: $mimeType")
-      //Logger.debug(s"Extension: $extension")
-      // MimeUtil.isTextMimeType does not work :/
-      val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss")
-      if ("x-markdown" == mimeType.getSubType) {
-        val source = IOUtils.toString(new FileInputStream(file))
-        Logger.debug("... markdown")
-        Markdown(new PegDownProcessor(ALL).markdownToHtml(source.trim))
-      } else if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
-        Logger.debug("... text")
-        Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
-      } else if ("image" == mimeType.getMediaType) {
-        Logger.debug("... image")
-        Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+    val descriptor = 
+      if (0 == file.length()) {
+        Empty
       } else {
-        Logger.debug("... binary")
-        Binary(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+        //Logger.debug(s"Detecting $file...")
+        MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
+        MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
+        MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
+        
+        val mimeTypes = MimeUtil.getMimeTypes(file)
+        val mimeType = MimeUtil.getMostSpecificMimeType(mimeTypes)
+        val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
+        val simplename = FilenameUtils.getBaseName(filename.toLowerCase(Locale.ENGLISH))
+        Logger.debug(s"MimeType: $mimeType")
+        //Logger.debug(s"Extension: $extension")
+        // MimeUtil.isTextMimeType does not work :/
+        val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto")
+        val imageTypes = List("svg")
+        if ("x-markdown" == mimeType.getSubType) {
+          val source = IOUtils.toString(new FileInputStream(file))
+          //Logger.debug("... markdown")
+          Markdown(new PegDownProcessor(ALL).markdownToHtml(source.trim))
+        } else if (imageTypes.contains(extension)) {
+          Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+        } else if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
+          //Logger.debug("... text")
+          Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
+        } else if ("image" == mimeType.getMediaType) {
+          //Logger.debug("... image")
+          Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+        } else {
+          //Logger.debug("... binary")
+          Binary(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
+        }
       }
-    }
+    Logger.debug(s"Type[$file] -> ${descriptor.getClass.getName}")
+    descriptor
   }
 
   implicit val userReads: Reads[Archetype] = (
