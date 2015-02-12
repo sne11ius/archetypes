@@ -1,3 +1,5 @@
+[![Build Status](http://wasis.nu:8090/buildStatus/icon?job=archetypes dist)](http://wasis.nu:8090/job/archetypes%20dist/)
+
 # archetypes
 
 This is simple search app for maven archetypes.
