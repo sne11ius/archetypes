@@ -36,7 +36,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
   override def onStart(app: Application) {
     //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
-    Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
+    //Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
   }
     
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
