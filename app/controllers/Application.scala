@@ -9,6 +9,8 @@ import views.forms.search.ArchetypeSearch._
 import play.api.data._
 import play.api.data.Forms._
 import models.PaginationInfo
+import models.ManifestInfo
+import com.jcabi.manifests.Manifests
 
 class Application @Inject() (archetypesService: ArchetypesService) extends Controller {
 
@@ -17,10 +19,20 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
   }
   
   def index() = DBAction { implicit rs =>
+    var manifestInfo = ManifestInfo("branch", "date", "rev")
+    try {
+      manifestInfo = ManifestInfo(
+        Manifests.read("Git-Branch"),
+        Manifests.read("Git-Build-Date"),
+        Manifests.read("Git-Head-Rev")
+      )
+    } catch {
+      case e: Exception => {}
+    }
     archetypeSearchForm.bindFromRequest.fold(
       formWithErrors => {
         val searchData = SearchData(None, None, None, None, None)
-        BadRequest(views.html.index(formWithErrors, List(), None, searchData, 0))
+        BadRequest(views.html.index(manifestInfo, formWithErrors, List(), None, searchData, 0))
       },
       searchData => {
         Logger.debug(s"Search data: $searchData")
@@ -30,8 +42,7 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
         val numArchetypes = archetypes.length
         val numPages = ((numArchetypes:Float) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)
-        Logger.debug(s"paginationInfo: $paginationInfo")
-        Ok(views.html.index(archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes))
+        Ok(views.html.index(manifestInfo, archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes))
       }
     )
   }

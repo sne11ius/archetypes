@@ -379,3 +379,7 @@ li.file {
   padding-left: 2px;
   padding-right: 2px;
 }
+
+.build-info {
+	font-size: 11px;
+}

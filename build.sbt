@@ -1,3 +1,7 @@
+import com.atlassian.labs.gitstamp.GitStampPlugin._
+
+Seq( gitStampSettings: _* )
+
 name := """archetypes"""
 
 version := "1.0-SNAPSHOT"
@@ -22,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.jsoup" % "jsoup" % "1.8.1",
   "joda-time" % "joda-time" % "2.4",
   "org.joda" % "joda-convert" % "1.6",
-  "com.github.tototoshi" %% "slick-joda-mapper" % "1.2.0",
+  "com.jcabi" % "jcabi-manifests" % "1.1",
   cache,
   ws,
   filters
