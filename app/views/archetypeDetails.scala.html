@@ -50,10 +50,12 @@
     <div class="details-overview-container" style="width: 90%">
       mvn archetype:generate -DgroupId=com.example.app -DartifactId=example-app -Dversion=1.0-SNAPSHOT -Dpackage=com.example.app -DinteractiveMode=false -DarchetypeGroupId=@archetype.groupId -DarchetypeArtifactId=@archetype.artifactId -DarchetypeVersionId=@archetype.version
     </div>
+    @*
     <form action="@routes.ArchetypesController.archetypeGenerate(archetype.groupId, archetype.artifactId, archetype.version)">
       <input type="submit" value="Generate">
     </form>
     <br>
+    *@
     <div id="details">
       @if(archetype.localDir.isDefined) {
         Archetype content:
