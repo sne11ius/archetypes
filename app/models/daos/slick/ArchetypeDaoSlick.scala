@@ -2,13 +2,11 @@ package models.daos.slick
 
 import models.Archetype
 import models.daos.ArchetypeDao
-import play.api.db.slick._
-import play.api.db.slick.Config.driver.simple._
 import models.daos.slick.ArchetypeSlickDB._
-import play.api.Play.current
-import play.api.Logger
-import models.Archetype
 import org.joda.time.DateTime
+import play.api.Play.current
+import play.api.db.slick.Config.driver.simple._
+import play.api.db.slick._
 
 class ArchetypeDaoSlick extends ArchetypeDao {
   

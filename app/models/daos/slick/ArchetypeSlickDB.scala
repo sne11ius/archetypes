@@ -5,12 +5,11 @@ import play.api.db.slick._
 import play.api.db.slick.Config.driver.simple._
 import org.joda.time.DateTime
 
-
 object ArchetypeSlickDB {
   
   implicit val stringListMapper = MappedColumnType.base[List[String],String](
     list => list.mkString(","),
-    string => string.split(',').toList
+    string => string.split(',').toList.filter { s => s.length() > 0 }
   )
   
   case class DBArchetype (

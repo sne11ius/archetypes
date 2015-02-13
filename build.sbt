@@ -27,6 +27,7 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.4",
   "org.joda" % "joda-convert" % "1.6",
   "com.jcabi" % "jcabi-manifests" % "1.1",
+  "org.zeroturnaround" % "zt-zip" % "1.8",
   cache,
   ws,
   filters

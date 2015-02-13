@@ -38,10 +38,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion))
     val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None);
     if (1 <= archetypes.size) {
-      //val archetype = archetypes.head
-      //val loadedArchetype = archetypesService.loadArchetypeContent(archetype)
-      //Logger.debug(s"Loaded archetype: $loadedArchetype")
-      //Logger.debug(s"basepath: ${archetype.localDir}")
       val loadedArchetype = archetypes.head
       val fileTree = filename match {
         case None => {
@@ -68,8 +64,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         } else {
           None
         }
-      //Logger.debug(s"$fileSource")
-      //Logger.debug(s"filename: $filename")
       Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
@@ -86,7 +80,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       if (0 == file.length()) {
         Empty
       } else {
-        //Logger.debug(s"Detecting $file...")
         MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
         MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector")
         MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector")
@@ -96,21 +89,16 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
         val simplename = FilenameUtils.getBaseName(filename.toLowerCase(Locale.ENGLISH))
         Logger.debug(s"MimeType: $mimeType")
-        //Logger.debug(s"Extension: $extension")
-        // MimeUtil.isTextMimeType does not work :/
         val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto", "pro", "desktop", "rb", "readme", "xhtml")
         val imageTypes = List("svg")
         if ("x-markdown" == mimeType.getSubType) {
           val source = IOUtils.toString(new FileInputStream(file))
-          //Logger.debug("... markdown")
           Markdown(new PegDownProcessor(ALL).markdownToHtml(source.trim))
         } else if (imageTypes.contains(extension)) {
           Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
         } else if ("text" == mimeType.getMediaType || textTypes.contains(mimeType.getSubType) || textTypes.contains(extension) || textTypes.contains(simplename)) {
-          //Logger.debug("... text")
           Text(sourcePrettifyService.toPrettyHtml(baseDir, filename))
         } else if ("image" == mimeType.getMediaType) {
-          //Logger.debug("... image")
           Image(routes.ArchetypesController.getFile(archetype.groupId, archetype.artifactId, archetype.version, filename).absoluteURL(current.configuration.getBoolean("https").get))
         } else {
           //Logger.debug("... binary")
@@ -119,6 +107,37 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       }
     Logger.debug(s"Type[$file] -> ${descriptor.getClass.getName}")
     descriptor
+  }
+  
+  def archetypeGenerate(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+    var archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
+    if (1 <= archetypes.size) {
+      val archetype = archetypes.head
+      val props = scala.collection.mutable.Map(
+        "groupId" -> "com.example",
+        "artifactId" -> "artifact",
+        "version" -> "1.0.0-SNAPSHOT",
+        "projectName" -> "My Project Name"
+      )
+      archetype.additionalProps.map { s =>
+        props += (s -> s"My$s") 
+      }
+      rs.body.asFormUrlEncoded match {
+        case None => {
+          Logger.debug("No form data D:")
+          Ok(views.html.archetypeGenerate(archetype, props.toMap))
+        }
+        case Some(map) => {
+          val yourGroupId = map.get("groupId").get.head
+          val yourArtifactId = map.get("artifactId").get.head
+          val yourVersion = map.get("version").get.head
+          val bytes = archetypesService.generate(archetype, map.map(e => (e._1, e._2.head)))
+          Ok(bytes).withHeaders(CONTENT_DISPOSITION -> s"attachment; filename=${yourGroupId}.${yourArtifactId}.${yourVersion}.zip")
+        }
+      }
+    } else {
+      NotFound
+    }
   }
 
   implicit val userReads: Reads[Archetype] = (
@@ -170,7 +189,6 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
           val downloadFile = new File(new File(archetype.localDir.get, "example-app"), file)
           Logger.debug("Downloading: " + downloadFile.toString())
           Ok.sendFile(downloadFile)//, inline, fileName, onClose)(new FileInputStream(downloadFile))
-          //Ok(xml.Utility.escape(IOUtils.toString(new FileInputStream(downloadFile))))
         }
       } else {
         NotFound

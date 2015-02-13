@@ -1,16 +1,16 @@
 package controllers
 
-import play.api._
-import play.api.mvc._
 import javax.inject.Inject
-import services.ArchetypesService
-import play.api.db.slick.DBAction
-import views.forms.search.ArchetypeSearch._
-import play.api.data._
-import play.api.data.Forms._
-import models.PaginationInfo
-import models.ManifestInfo
+
 import com.jcabi.manifests.Manifests
+import models.{ManifestInfo, PaginationInfo}
+import play.api._
+import play.api.data.Forms._
+import play.api.data._
+import play.api.db.slick.DBAction
+import play.api.mvc._
+import services.ArchetypesService
+import views.forms.search.ArchetypeSearch._
 
 class Application @Inject() (archetypesService: ArchetypesService) extends Controller {
 

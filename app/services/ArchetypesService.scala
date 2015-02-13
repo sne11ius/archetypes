@@ -2,7 +2,6 @@ package services
 
 
 import models.Archetype
-import models.Archetype
 
 trait ArchetypesService {
   
@@ -14,5 +13,6 @@ trait ArchetypesService {
   def safe(newArchetype: Archetype): Unit
   
   def loadArchetypeContent(archetype: Archetype): Archetype
+  def generate(archetype: Archetype, propValues: Map[String, String]): Array[Byte]
   
 }
