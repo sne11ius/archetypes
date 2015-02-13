@@ -355,7 +355,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       }).toList
     }
     val dafaultCmds = List[String](
-     "mvn",
+     "/usr/bin/mvn",
       "archetype:generate",
       "-DinteractiveMode=false",
       s"-DarchetypeGroupId=${archetype.groupId}",
