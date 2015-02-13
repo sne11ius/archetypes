@@ -115,7 +115,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       val archetype = archetypes.head
       val props = scala.collection.mutable.Map(
         "groupId" -> "com.example",
-        "artifactId" -> "artifact",
+        "artifactId" -> "my-artifact",
         "version" -> "1.0.0-SNAPSHOT",
         "projectName" -> "My Project Name"
       )
