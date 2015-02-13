@@ -9,6 +9,8 @@ jdk:
 
 before_script:
 - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG, TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST, TRAVIS_BRANCH=$TRAVIS_BRANCH"
+before_script:
+ - chmod +x scripts/ci-build
 
 script: scripts/ci-build
 
