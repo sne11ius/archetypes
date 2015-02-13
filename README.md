@@ -1,4 +1,6 @@
-[![Build Status](http://wasis.nu:8090/buildStatus/icon?job=archetypes dist)](http://wasis.nu:8090/job/archetypes%20dist/)
+Jenkins: [![Build Status](http://wasis.nu:8090/buildStatus/icon?job=archetypes dist)](http://wasis.nu:8090/job/archetypes%20dist/)
+
+Travis CI: [![Build Status](https://travis-ci.org/sne11ius/archetypes.svg?branch=master)](https://travis-ci.org/sne11ius/archetypes)
 
 # archetypes
 
