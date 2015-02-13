@@ -3,7 +3,7 @@ set -o nounset -o errexit
 
 echo ""
 echo "Compiling"
-sbt clean compile
+sbt clean compile dist
 
 echo ""
 echo "Build finished"
