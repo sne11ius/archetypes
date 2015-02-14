@@ -331,11 +331,6 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       Logger.debug(s"Cannot mkdir $buildBaseDir")
     }
     Logger.debug(s"buildBaseDir: $buildBaseDir")
-    /*
-    val propsList = additionalProps.map( p => {
-      "-D" + p + "=Example" + p.split("-").map(s => s.take(1).toUpperCase(Locale.ENGLISH) + s.drop(1)).mkString
-    })
-    */
     val groupId = propValues.get("groupId").get
     val artifactId = propValues.get("artifactId").get
     val version = propValues.get("version").get
@@ -355,7 +350,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       }).toList
     }
     val dafaultCmds = List[String](
-     "/usr/bin/mvn",
+     "mvn",
       "archetype:generate",
       "-DinteractiveMode=false",
       s"-DarchetypeGroupId=${archetype.groupId}",
@@ -363,8 +358,7 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       s"-DarchetypeVersion=${archetype.version}",
       s"-DgroupId=$groupId",
       s"-DartifactId=$artifactId",
-      s"-Dversion=$version",
-      "-DprojectName=ExampleProject"
+      s"-Dversion=$version"
     )
     val finalCmd = dafaultCmds ++ propsList
     Logger.debug("cmd:")

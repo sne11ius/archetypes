@@ -38,6 +38,7 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
               .replace("xslt", "xml")
               .replace("bpmn", "xml")
               .replace("oaw", "xml")
+              .replace("tml", "xml")
               .replace("bpmn_diagram", "xml")
               .replace("ixr", "xml")
               .replace("xhtml", "html")
