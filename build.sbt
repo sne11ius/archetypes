@@ -28,6 +28,10 @@ libraryDependencies ++= Seq(
   "org.joda" % "joda-convert" % "1.6",
   "com.jcabi" % "jcabi-manifests" % "1.1",
   "org.zeroturnaround" % "zt-zip" % "1.8",
+  "org.webjars" %% "webjars-play" % "2.3.0-2",
+  "org.webjars" % "jquery" % "1.10.2-1",
+  "org.webjars" % "bootstrap" % "3.3.2",
+  "org.webjars" % "bootstrap-material-design" % "0.2.1",
   cache,
   ws,
   filters

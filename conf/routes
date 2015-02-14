@@ -9,3 +9,4 @@ GET    /rest/archetypes/:groupId/:artifactId/:version/files/*file    @controller
 # GET    /reimportArchetypes                                           @controllers.ArchetypesController.reimportArchetypes
 
 GET    /assets/*file                                                 controllers.Assets.at(path="/public", file)
+GET    /webjars/*file                                                controllers.WebJarAssets.at(file)
