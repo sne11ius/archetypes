@@ -7,22 +7,71 @@
     <title>@title</title>
     <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
     
+    <link href="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))" rel="stylesheet">
     <link href="@routes.WebJarAssets.at(WebJarAssets.locate("ripples.min.css"))" rel="stylesheet">
     <link href="@routes.WebJarAssets.at(WebJarAssets.locate("material-wfont.min.css"))" rel="stylesheet">
     <link href="@routes.Assets.at("stylesheets/main.css")" rel="stylesheet" media="screen">
     
   </head>
   <body>
-	  <p class="bs-component">
-	    <a href="javascript:void(0)" class="btn btn-default">Default</a> <a
-	      href="javascript:void(0)" class="btn btn-primary">Primary</a> <a
-	      href="javascript:void(0)" class="btn btn-success">Success</a> <a
-	      href="javascript:void(0)" class="btn btn-info">Info</a> <a
-	      href="javascript:void(0)" class="btn btn-warning">Warning</a> <a
-	      href="javascript:void(0)" class="btn btn-danger">Danger</a> <a
-	      href="javascript:void(0)" class="btn btn-link">Link</a>
-	  </p>
-    <div id="blog-hint">
+  <!--div class="page-header">
+    <div class="container">
+      <div class="row-fluid">
+        <h1>wasis.nu/mit/archetypes?</h1>
+      </div>
+    </div>
+  </div-->
+  <div class="navbar navbar-default">
+	  <div class="navbar-header">
+	    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+	      <span class="icon-bar"></span>
+	      <span class="icon-bar"></span>
+	      <span class="icon-bar"></span>
+	    </button>
+	    <a class="navbar-brand" href="https://wasis.nu/mit/archetypes">wasis.nu/mit/archetypes?</a>
+	  </div>
+    <ul class="nav navbar-nav navbar-right">
+      <li><a href="https://wasis.nu/mit/blog">Blog</a></li>
+      <li><a href="@routes.Application.about">About</a></li>
+    </ul>
+	  <!--
+	  <div class="navbar-collapse collapse navbar-responsive-collapse">
+	    <ul class="nav navbar-nav">
+	      <li class="active"><a href="javascript:void(0)">Active</a></li>
+	      <li><a href="javascript:void(0)">Link</a></li>
+	      <li class="dropdown">
+	        <a href="http://fezvrasta.github.io/bootstrap-material-design/bootstrap-elements.html" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+	        <ul class="dropdown-menu">
+	          <li><a href="javascript:void(0)">Action</a></li>
+	          <li><a href="javascript:void(0)">Another action</a></li>
+	          <li><a href="javascript:void(0)">Something else here</a></li>
+	          <li class="divider"></li>
+	          <li class="dropdown-header">Dropdown header</li>
+	          <li><a href="javascript:void(0)">Separated link</a></li>
+	          <li><a href="javascript:void(0)">One more separated link</a></li>
+	        </ul>
+	      </li>
+	    </ul>
+	    <form class="navbar-form navbar-left">
+	      <input type="text" class="form-control col-lg-8" placeholder="Search">
+	    </form>
+	    <ul class="nav navbar-nav navbar-right">
+	      <li><a href="javascript:void(0)">Link</a></li>
+	      <li class="dropdown">
+	        <a href="http://fezvrasta.github.io/bootstrap-material-design/bootstrap-elements.html" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+	        <ul class="dropdown-menu">
+	          <li><a href="javascript:void(0)">Action</a></li>
+	          <li><a href="javascript:void(0)">Another action</a></li>
+	          <li><a href="javascript:void(0)">Something else here</a></li>
+	          <li class="divider"></li>
+	          <li><a href="javascript:void(0)">Separated link</a></li>
+	        </ul>
+	      </li>
+	    </ul>
+	  </div>
+	  -->
+	</div>
+    <!--div id="blog-hint">
       <a href="/mit/blog">&#8608; Blog</a>
     </div>
     <div id="about-hint">
@@ -46,7 +95,7 @@
           Powered by <a href="https://github.com/sne11ius/archetypes">github.com/sne11ius/archetypes</a>
         </p>
       </div>
-    </div>
+    </div-->
     @content
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))' type='text/javascript'></script>

@@ -18,6 +18,10 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
     Redirect("/" + path)
   }
   
+  def about() = Action { implicit rs =>
+    Ok(views.html.about())
+  }
+  
   def index() = DBAction { implicit rs =>
     var manifestInfo = ManifestInfo("branch", "date", "rev")
     try {

@@ -1,3 +1,10 @@
+$('#archetypes .details').hide();
+$('#archetypes col.details').remove();
+$('#archetypes [data-href]').click(function() {
+    window.location.href = $(this).find("a").attr("href");
+});
+
+
 $(document).ready(function() {
   if ('newest' == $("#version").val()) {
     $('#newest-checkbox').attr('checked', 'checked');

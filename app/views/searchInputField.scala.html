@@ -1,9 +1,5 @@
-@(elements: helper.FieldElements)
+@(field: play.api.data.Field, value: String = "")
 
-<div class="form-line @if(elements.hasErrors) {error}">
-  <label for="@elements.id">@{elements.label}:</label>
-  @elements.input
-  @if(elements.hasErrors) {
-    <span class="error">@elements.errors.mkString(", ")</span>
-  }
+<div class="form-control">
+  <input type="text" class="form-control floating-label @if(field.hasErrors) {error}" placeholder="@{field.label}" name="@{field.name}" value="@field.value">
 </div>
