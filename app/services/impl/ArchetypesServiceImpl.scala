@@ -324,50 +324,28 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
       .withLocale(Locale.ENGLISH)//"dd-mmm-yyyy hh:mm"
 
   def generate(archetype: Archetype, propValues: Map[String, String]): Array[Byte] = {
-    Logger.debug(s"props: $propValues")
     val buildUuid = UUID.randomUUID()
     val buildBaseDir = new File(rootDir, buildUuid.toString())
     if (!buildBaseDir.mkdirs()) {
-      Logger.debug(s"Cannot mkdir $buildBaseDir")
+      Logger.error(s"Cannot mkdir $buildBaseDir")
     }
-    Logger.debug(s"buildBaseDir: $buildBaseDir")
-    val groupId = propValues.get("groupId").get
-    val artifactId = propValues.get("artifactId").get
-    val version = propValues.get("version").get
-    val projectName = propValues.get("projectName").get
-    val additionalProps = scala.collection.mutable.Map[String, String]()
-    additionalProps ++= propValues
-    additionalProps -= "groupId"
-    additionalProps -= "artifactId"
-    additionalProps -= "version"
-    additionalProps -= "groupId"
-    var propsList = List[String]()
-    if (0 < additionalProps.size) {
-      propsList = additionalProps.map( p => {
-        val key = p._1
-        val value = p._2
-        s"-D${key}=${value}"
-      }).toList
-    }
+    val propsList = propValues.map( p => {
+      val key = p._1
+      val value = p._2
+      s"-D${key}=${value}"
+    }).toList
     val dafaultCmds = List[String](
      "mvn",
       "archetype:generate",
       "-DinteractiveMode=false",
       s"-DarchetypeGroupId=${archetype.groupId}",
       s"-DarchetypeArtifactId=${archetype.artifactId}",
-      s"-DarchetypeVersion=${archetype.version}",
-      s"-DgroupId=$groupId",
-      s"-DartifactId=$artifactId",
-      s"-Dversion=$version"
+      s"-DarchetypeVersion=${archetype.version}"
     )
     val finalCmd = dafaultCmds ++ propsList
-    Logger.debug("cmd:")
-    Logger.debug(finalCmd.mkString(" "))
     val sb = new StringBuffer
     val process = Process((new java.lang.ProcessBuilder(finalCmd)) directory buildBaseDir)
     var exitValue = process.run(BasicIO(false, sb, None)).exitValue
-    Logger.debug("result:")
-    Logger.debug(sb.toString())
     ZipUtil.pack(buildBaseDir, new File(buildBaseDir + ".zip"))
     val byteArray: Array[Byte] = IOUtils.toByteArray(new FileInputStream(new File(buildBaseDir + ".zip")))
     FileUtils.deleteQuietly(buildBaseDir)
