@@ -23,8 +23,8 @@
       </div>
     </div>
     <form method="post">
-	    <div class="form-container" style="width: 400px;">
-	      <div class="form-line">
+      <div class="form-container" style="width: 400px;">
+        <div class="form-line">
           <label style="width: 148px;">Your groupId:</label>
           <input type="text" name="groupId" value="@{properties.get("groupId").get}">
         </div>
@@ -44,18 +44,18 @@
           -= "version"
         ) { map =>
           @for((key, value) <- map) {
-	          <div class="form-line">
-	            <label style="width: 148px;">Your @key:</label>
-	            <input type="text" name="@key" value="@value">
-	          </div>
-					}
-				}
+            <div class="form-line">
+              <label style="width: 148px;">Your @key:</label>
+              <input type="text" name="@key" value="@value">
+            </div>
+          }
+        }
 
         <div class="form-line">
           <label></label>
           <input type="submit" value="Generate already!" style="position: relative; left: 16px;">
         </div>
-		  </div>
-	  </form>
+      </div>
+    </form>
   </center>
 }
