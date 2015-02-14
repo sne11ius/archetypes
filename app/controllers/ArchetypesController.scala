@@ -89,7 +89,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         val extension = FilenameUtils.getExtension(filename.toLowerCase(Locale.ENGLISH))
         val simplename = FilenameUtils.getBaseName(filename.toLowerCase(Locale.ENGLISH))
         Logger.debug(s"MimeType: $mimeType")
-        val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto", "pro", "desktop", "rb", "readme", "xhtml")
+        val textTypes = List("xml", "x-javascript", "sql", "jsf", "prefs", "factorypath", "mf", "gitignore", "license", "bnd", "as", "sh", "tfl", "cfg", "editorconfig", "page", "bat", "gitkeep", "hgignore", "sass", "scss", "yml", "json", "mustache", "gradlew", "proto", "pro", "desktop", "rb", "readme", "xhtml", "zul")
         val imageTypes = List("svg")
         if ("x-markdown" == mimeType.getSubType) {
           val source = IOUtils.toString(new FileInputStream(file))

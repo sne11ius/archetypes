@@ -32,6 +32,7 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
               .replace("launch", "xml")
               .replace("xsd", "xml")
               .replace("xsl", "xml")
+              .replace("zul", "xml")
               .replace("xhtml", "html")
     Await.result(WS.url("http://hilite.me/api").withFollowRedirects(true).post(Map(
         "code" -> Seq(source),
