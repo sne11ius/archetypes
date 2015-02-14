@@ -1,7 +1,7 @@
 package models
 
 case class ManifestInfo(
-	gitBuildBranch: String,  
+  gitBuildBranch: String,  
   gitBuildDate: String,
   gitBuildHeadRevision: String
 )

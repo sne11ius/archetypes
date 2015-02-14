@@ -59,42 +59,42 @@
     <div id="details">
       @if(archetype.localDir.isDefined) {
         Archetype content:
-		    <div id="browser-container">
-			    <div id="file-browser">
-	          @Html(fileTree.getOrElse("[no file browser available]"))
-			    </div>
-			    <div id="file-content">
-			      @* @Html(fileSource.getOrElse("[no file content available]")) *@
-			      @file match {
-						  case Some(descriptor) => {
-						    @descriptor match {
-						      case Empty => {
-						        [This file is empty]
-						      }
-	                case Text(text) => {
-	                  @Html(text)
-	                }
-	                case Markdown(html) => {
-	                  @Html(html)
-	                }
-						      case Image(src) => {
-						        <img src="@src">
-						      }
-						      case Binary(href) => {
-						        This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
-						      }
-						    }
-						  }
-						  case None => {
-						    [no file content available]
-						  }
-					  }
-			    </div>
-		    </div>
-	    } else {
-	      Archetype details could not be loaded. Here is why:
+        <div id="browser-container">
+          <div id="file-browser">
+            @Html(fileTree.getOrElse("[no file browser available]"))
+          </div>
+          <div id="file-content">
+            @* @Html(fileSource.getOrElse("[no file content available]")) *@
+            @file match {
+              case Some(descriptor) => {
+                @descriptor match {
+                  case Empty => {
+                    [This file is empty]
+                  }
+                  case Text(text) => {
+                    @Html(text)
+                  }
+                  case Markdown(html) => {
+                    @Html(html)
+                  }
+                  case Image(src) => {
+                    <img src="@src">
+                  }
+                  case Binary(href) => {
+                    This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
+                  }
+                }
+              }
+              case None => {
+                [no file content available]
+              }
+            }
+          </div>
+        </div>
+      } else {
+        Archetype details could not be loaded. Here is why:
         <pre>@archetype.generateLog</pre>
-	    }
+      }
     </div>
   </center>
 }

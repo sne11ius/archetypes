@@ -7,67 +7,67 @@
 @implicitField = @{ FieldConstructor(searchInputField.f) }
 
 @main("wasis.nu/mit/archetypes?") {
-	<center>
-	  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
-	  <div class="form-container">
-	    @form(action = routes.Application.index) {
-	      @inputText(searchForm("groupId"))
-	      @inputText(searchForm("artifactId"))
-	      @inputText(searchForm("description"))
+  <center>
+    <h1>wasis.nu/mit/<wbr>archetypes?</h1>
+    <div class="form-container">
+      @form(action = routes.Application.index) {
+        @inputText(searchForm("groupId"))
+        @inputText(searchForm("artifactId"))
+        @inputText(searchForm("description"))
         <div class="form-line">
-		      @select(searchForm("javaVersion"), Seq(
-		        "" -> "[any]",
-		        "1.8" -> "1.8",
-		        "1.7" -> "1.7",
-		        "1.6" -> "1.6",
-		        "1.5" -> "1.5",
-		        "1.4" -> "1.4",
-		        "1.3" -> "1.3",
-		        "1.2" -> "1.2",
-		        "1.1" -> "1.1",
-		        "[default]" -> "[default]"
-		      ))
-	      </div>
+          @select(searchForm("javaVersion"), Seq(
+            "" -> "[any]",
+            "1.8" -> "1.8",
+            "1.7" -> "1.7",
+            "1.6" -> "1.6",
+            "1.5" -> "1.5",
+            "1.4" -> "1.4",
+            "1.3" -> "1.3",
+            "1.2" -> "1.2",
+            "1.1" -> "1.1",
+            "[default]" -> "[default]"
+          ))
+        </div>
         <div class="form-line">
           <label></label>
-	        <input type="submit" value="Search">
+          <input type="submit" value="Search">
         </div>
-	    }
-	  </div>
-	  <div id="help-container">
-	    This is a search engine for maven archetypes.
-	  </div>
-	  <div style="margin: 20px">
+      }
+    </div>
+    <div id="help-container">
+      This is a search engine for maven archetypes.
+    </div>
+    <div style="margin: 20px">
       Found @itemsTotal items
-	  </div>
-	  <div id="list-container">
-	    <table>
-		    <col width="10%">
-		    <col width="10%">
-		    <col width="10%">
-		    <col width="10%">
-		    <col width="10%">
-		    <col width="10%">
+    </div>
+    <div id="list-container">
+      <table>
         <col width="10%">
-		    <tr>
-		      <th class="details"></th>
-		      <th class="groupId">groupId</th>
-		      <th class="artifactId">artifactId</th>
-		      <th class="description">description</th>
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+        <tr>
+          <th class="details"></th>
+          <th class="groupId">groupId</th>
+          <th class="artifactId">artifactId</th>
+          <th class="description">description</th>
           <th class="javaVersion">javaVersion</th>
-		    </tr>
-		    @for(archetype <- archetypes) {
-		      <tr>
-		        <td class="details"><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">details</a></td>
-		        <td class="groupId">@archetype.groupId</td>
-		        <td class="artifactId">@archetype.artifactId</td>
-		        <td class="description">@archetype.description</td>
+        </tr>
+        @for(archetype <- archetypes) {
+          <tr>
+            <td class="details"><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">details</a></td>
+            <td class="groupId">@archetype.groupId</td>
+            <td class="artifactId">@archetype.artifactId</td>
+            <td class="description">@archetype.description</td>
             <td class="javaVersion">@archetype.javaVersion</td>
-		      </tr>
-		    }
-	    </table>
-	  </div>
-	  <div class="error-archetypes">
+          </tr>
+        }
+      </table>
+    </div>
+    <div class="error-archetypes">
       <h2>Archetypes with additional properties (@{archetypes.filter(a => !a.additionalProps.isEmpty).size} items)</h2>
       <table>
         <col width="10%">
@@ -90,8 +90,8 @@
         }
       </table>
     </div>
-	</center>
-	@if(paginationInfo.isDefined) {
+  </center>
+  @if(paginationInfo.isDefined) {
     @paginator(paginationInfo.get, searchData)
   }
   <br>
