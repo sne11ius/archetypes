@@ -27,6 +27,7 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
               .replace("fxml", "xml")
               .replace("ftl", "html")
               .replace("mustache", "html")
+              .replace("erb", "html")
               .replace("classpath", "xml")
               .replace("tmx", "xml")
               .replace("launch", "xml")
