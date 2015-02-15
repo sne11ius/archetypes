@@ -20,6 +20,10 @@
   font-style: normal;
 }
 
+.content {
+	margin-top: 70px;
+}
+
 .page-header {
   margin-top: 0;
   background-color: #009587;
