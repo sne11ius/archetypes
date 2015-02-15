@@ -49,7 +49,6 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
         BadRequest(views.html.index(manifestInfo, formWithErrors, List(), None, searchData, 0))
       },
       searchData => {
-        Logger.debug(s"Search data: $searchData")
         val start = Form("start" -> text).bindFromRequest.fold( hasErrors => { 0 }, value => { value.toInt } )
         val numItems = Form("numItems" -> text).bindFromRequest.fold( hasErrors => { 200 }, value => { value.toInt } )
         val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, Some(searchData.version.getOrElse("newest")), searchData.description, searchData.javaVersion)
