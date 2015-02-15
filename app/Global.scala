@@ -41,7 +41,8 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     //Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
     //Akka.system.scheduler.scheduleOnce(1 second) { showNewArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { showInitialArchetypes }
-    Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
+    Akka.system.scheduler.scheduleOnce(1 second) { updateNewestArchetypes }
     Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
   }
   
@@ -70,6 +71,20 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
         list.sortWith((a1, a2) => { 0 > a1.compareTo(a2) }).take(1)
       }
     }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
+  }
+  
+  def updateNewestArchetypes = {
+    def newestArchetypes = newest(archetypesService.findAll)
+    def total = newestArchetypes.size
+    newestArchetypes.zipWithIndex.map { case (a, index) =>
+      Logger.debug(s"${index + 1}/$total")
+      val loadedArchetype = archetypesService.loadArchetypeContent(a)
+      if (loadedArchetype.localDir.isEmpty) {
+        Logger.debug(s"Cannot load $loadedArchetype")
+      } else {
+        archetypesService.safe(loadedArchetype)
+      }
+    }
   }
   
   def addNewArchetypes = {
