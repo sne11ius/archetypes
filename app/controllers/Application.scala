@@ -19,7 +19,17 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
   }
   
   def about() = Action { implicit rs =>
-    Ok(views.html.about())
+    var manifestInfo = ManifestInfo("branch", "date", "rev")
+    try {
+      manifestInfo = ManifestInfo(
+        Manifests.read("Git-Branch"),
+        Manifests.read("Git-Build-Date"),
+        Manifests.read("Git-Head-Rev")
+      )
+    } catch {
+      case e: Exception => {}
+    }
+    Ok(views.html.about(manifestInfo))
   }
   
   def index() = DBAction { implicit rs =>

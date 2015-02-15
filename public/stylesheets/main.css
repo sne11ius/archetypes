@@ -1,28 +1,260 @@
+@font-face {
+  font-family: 'EnvyCodeRWeb';
+  src: url('../fonts/envy_code_r-webfont.eot');
+  src: url('../fonts/envy_code_r-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/envy_code_r-webfont.woff') format('woff'),
+       url('../fonts/envy_code_r-webfont.ttf') format('truetype'),
+       url('../fonts/envy_code_r-webfont.svg#envy_code_rregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'EnvyCodeRWeb';
+  src: url('../fonts/envy_code_r_bold-webfont.eot');
+  src: url('../fonts/envy_code_r_bold-webfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/envy_code_r_bold-webfont.woff') format('woff'),
+       url('../fonts/envy_code_r_bold-webfont.ttf') format('truetype'),
+       url('../fonts/envy_code_r_bold-webfont.svg#envy_code_rbold') format('svg');
+  font-weight: bold;
+  font-style: normal;
+}
+
 .page-header {
   margin-top: 0;
-	background-color: #009587;
+  background-color: #009587;
+}
+.go-back * {
+  font-size: 16px;
+}
+.go-back i {
+  position: relative;
+  top: 1px;
+  margin-right: 5px;
+}
+
+.navbar + .navbar {
+  position: relative;
+  top: -20px;
 }
 
 #search-form .btn {
-	width: 100%;
-	margin-top: 18px;
+  width: 100%;
+  margin-top: 18px;
 }
 
 .form-control, .form-control-wrapper {
-	margin-top: 18px;
+  margin-top: 18px;
 }
 
-td {
-	cursor: pointer;
+#archetypes td {
+  cursor: pointer;
 }
 
 .pull-right {
-	padding: 5px;
-	margin: 5px;
-	margin-right: 0;
+  padding: 5px;
+  margin: 5px;
+  margin-right: 0;
   margin-bottom: 10px;
 }
 
 .navbar-right {
-	margin-right: 0;
+  margin-right: 0;
+}
+
+.detail-line {
+}
+
+.detail-line span, .detail-line label {
+}
+
+.detail-line label {
+  margin-right: 5px;
+}
+
+.detail-line span {
+  display: inline-block;
+  text-align: right;
+}
+
+table.archetype-details {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+table.archetype-details td {
+  vertical-align: top;
+}
+
+td.value {
+  /*text-align: right;*/
+}
+
+td.prop-name {
+  font-weight: bold;
+  padding-right: 10px;
+}
+
+.command form {
+	text-align: right;
+}
+
+.command code {
+  background-color: white;
+  color: black;
+}
+
+.paginator-top {
+  position: absolute;
+  top: -16px;
+  left: 14px;
+}
+
+.pagination > li> a, .pagination > li > span {
+  border-radius: 0 !important;
+}
+
+.pagination>li>a, .pagination>li>span {
+  color: #009587;
+}
+
+.pagination>.active>a, .pagination>.active>a:focus, .pagination>.active>a:hover, .pagination>.active>span, .pagination>.active>span:focus, .pagination>.active>span:hover {
+  background-color: #009587;
+  border-color: #009587;
+}
+
+pre, code {
+  font-family: 'EnvyCodeRWeb'
+}
+
+#file-browser {
+	overflow: auto;
+	max-height: 700px;
+}
+
+.directory-tree {
+  text-align: left;
+  padding-left: 0;
+  font-family: Arial;
+  font-size: 12px;
+}
+
+ul.directory {
+  padding-left: 10px;
+}
+
+.directory-tree li {
+  list-style-type: none;
+  margin-top: 2px;
+}
+
+li.file {
+  padding-left: 10px;
+}
+
+.directory-name:before {
+  content: ' ';
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  background-image: url(./directory.png);
+  background-size: cover;
+  position: relative;
+  top: 3px;
+  left: -6px;;
+}
+
+.file:before {
+  content: ' ';
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  background-image: url(./file.png);
+  background-size: cover;
+  position: relative;
+  left: -6px;
+  top: 3px;
+}
+
+.file.zip:before,
+.file.jar:before,
+.file.war:before,
+.file.rar:before {
+  background-image: url(./zip.png);
+}
+
+.file.java:before {
+  background-image: url(./java2.png);
+}
+
+.file.xml:before {
+  background-image: url(./code.png);
+}
+
+.file.html:before {
+  background-image: url(./html.png);
+}
+
+.file.css:before {
+  background-image: url(./css.png);
+}
+
+.file.jsp:before {
+  background-image: url(./html.png);
+}
+
+.directory-tree li.active {
+  background-color: rgb(149, 194, 255);
+  padding-bottom: 3px;
+  background-color: #009587;
+}
+
+.directory-tree li.active a {
+  color: white;
+}
+
+.directory-tree a:hover {
+  background-color: #009587;
+  padding: 2px;
+  padding-left: 3px;
+  padding-right: 3px;
+  color: white;
+}
+
+.directory-tree a {
+  text-decoration: none;
+  color: black;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.file-content > div {
+}
+
+.file-content {
+	overflow: scroll;
+	width: 63%;
+	max-height: 714px;
+}
+
+.file-content td {
+	
+}
+
+.file-content td:first-child pre {
+	border-radius: 0;
+	border: 0;
+	background-color: white;
+}
+
+.file-content td + td pre {
+  border-radius: 0;
+  border: 0;
+  background-color: white;
+}
+
+.well.no-padding {
+	padding: 7px;
+	margin-left: 15px;
+	overflow: auto;
 }

@@ -1,98 +1,108 @@
 @import views.forms.search.ArchetypeSearch._
+@import java.util.Locale
 
 @(archetype: Archetype, searchData: Option[SearchData], fileTree: Option[String], file: Option[FileDescriptor])
 
 @main("wasis.nu/mit/archetypes?") {
-
-  <h1>wasis.nu/mit/<wbr>archetypes?</h1>
-  <center>
-    @searchData match {
-      case None => {
-        <a href="@routes.Application.index">Back to search</a>
-      }
-      case Some(searchData) => {
-        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion">Back to search</a>
-      }
-    }
-    <br>
-    Details for
-    <div class="details-overview-container">
-      <div class="line">
-        <label for="groupId">groupId:</label>
-        <span id="groupId">@archetype.groupId</span>
-      </div>
-      <div class="line">
-        <label for="artifactId">artifactId:</label>
-        <span id="artifactId">@archetype.artifactId</span>
-      </div>
-      <div class="line">
-        <label for="version">version:</label>
-        <span id="version">@archetype.version</span>
-      </div>
-      <div class="line">
-        <label for="description">description:</label>
-        <span id="description">@archetype.description</span>
-      </div>
-      <div class="line">
-        <label for="javaVersion">java version:</label>
-        <span id="javaVersion">@archetype.javaVersion</span>
-      </div>
-      <div class="line">
-        <label for="packaging">packaging:</label>
-        <span id="packaging">@archetype.packaging</span>
-      </div>
-      <div class="line">
-        <label for="additionalProps">additional props:</label>
-        <span id="additionalProps">@archetype.additionalProps</span>
-      </div>
+<div class="navbar navbar-default">
+	<ul class="nav navbar-nav go-back">
+	  @searchData match {
+	    case None => {
+	      <li><a href="@routes.Application.index"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
+	    }
+	    case Some(searchData) => {
+	      <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
+	    }
+	  }
+	</ul>
+</div>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-6 col-md-5 well well-small">
+	    <h4>Archetype details</h4>
+	    <table class="archetype-details">
+        <tr>
+          <td class="prop-name">Group Id:</td>
+          <td class="value">@archetype.groupId</td>
+        </tr>
+        <tr>
+          <td class="prop-name">Artifact Id:</td>
+          <td class="value">@archetype.artifactId</td>
+        </tr>
+        <tr>
+          <td class="prop-name">Version:</td>
+          <td class="value">@archetype.version</td>
+        </tr>
+        <tr>
+          <td class="prop-name">Description:</td>
+          <td class="value">@archetype.description</td>
+        </tr>
+        <tr>
+          <td class="prop-name">Java Version:</td>
+          <td class="value">@archetype.javaVersion</td>
+        </tr>
+        <tr>
+          <td class="prop-name">Packaging:</td>
+          <td class="value">@archetype.packaging</td>
+        </tr>
+	    </table>
     </div>
-    Command:
-    <div class="details-overview-container" style="width: 90%">
-      mvn archetype:generate -DgroupId=com.example.app -DartifactId=example-app -Dversion=1.0-SNAPSHOT -Dpackage=com.example.app -DinteractiveMode=false -DarchetypeGroupId=@archetype.groupId -DarchetypeArtifactId=@archetype.artifactId -DarchetypeVersionId=@archetype.version
-    </div>
-    <form action="@routes.ArchetypesController.archetypeGenerate(archetype.groupId, archetype.artifactId, archetype.version)">
-      <input type="submit" value="Generate">
-    </form>
-    <br>
-    <div id="details">
-      @if(archetype.localDir.isDefined) {
-        Archetype content:
-        <div id="browser-container">
-          <div id="file-browser">
-            @Html(fileTree.getOrElse("[no file browser available]"))
-          </div>
-          <div id="file-content">
-            @* @Html(fileSource.getOrElse("[no file content available]")) *@
-            @file match {
-              case Some(descriptor) => {
-                @descriptor match {
-                  case Empty => {
-                    [This file is empty]
-                  }
-                  case Text(text) => {
-                    @Html(text)
-                  }
-                  case Markdown(html) => {
-                    @Html(html)
-                  }
-                  case Image(src) => {
-                    <img src="@src">
-                  }
-                  case Binary(href) => {
-                    This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
-                  }
-                }
-              }
-              case None => {
-                [no file content available]
-              }
-            }
-          </div>
+    <div class="col-xs-12 col-md-7">
+      <div class="well well-small command">
+	      <h4>Command</h4>
+        <code>
+          mvn archetype:generate -DgroupId=com.example.app -DartifactId=example-app -Dversion=1.0-SNAPSHOT -Dpackage=com.example.app -DinteractiveMode=false -DarchetypeGroupId=@archetype.groupId -DarchetypeArtifactId=@archetype.artifactId -DarchetypeVersionId=@archetype.version
+          @for(prop <- archetype.additionalProps) {
+            -D@prop=My@{prop.take(1).toUpperCase(Locale.ENGLISH) + prop.drop(1)}
+          }
+        </code>
+        <div class="" style="margin-top: 30px;">
+	        <form action="@routes.ArchetypesController.archetypeGenerate(archetype.groupId, archetype.artifactId, archetype.version)">
+	          <span style="margin-right: 50px;">Create project from this archetype</span><button type="submit" class="btn btn-primary btn-fab btn-raised"><i class="mdi-navigation-arrow-forward"></i></button>
+	        </form>
         </div>
-      } else {
-        Archetype details could not be loaded. Here is why:
-        <pre>@archetype.generateLog</pre>
-      }
+      </div>
     </div>
-  </center>
+  </div>
+  <div class="row">
+    @if(archetype.localDir.isDefined) {
+	    <div class="col-xs-6 col-md-4 well well-small no-padding">
+		    <div id="file-browser">
+		      @Html(fileTree.getOrElse("[no file browser available]"))
+		    </div>
+	    </div>
+	    <div class="col-xs-12 col-md-8 well well-small file-content no-padding">
+	      @file match {
+		      case Some(descriptor) => {
+		        @descriptor match {
+		          case Empty => {
+		            [This file is empty]
+		          }
+		          case Text(text) => {
+		            @Html(text)
+		          }
+		          case Markdown(html) => {
+		            @Html(html)
+		          }
+		          case Image(src) => {
+		            <img src="@src">
+		          }
+		          case Binary(href) => {
+		            This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
+		          }
+		        }
+		      }
+		      case None => {
+		        [no file content available]
+		      }
+		    }
+	    </div>
+    } else {
+      <div class="col-xs-6 col-md-12 well well-small">
+	      Archetype details could not be loaded. Here is why:
+	      <pre>@archetype.generateLog</pre>
+      </div>
+     }
+  </div>
+</div>
 }

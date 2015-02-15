@@ -48,7 +48,7 @@ class HiliteMeSourcePrettifyService @Inject() () extends SourcePrettifyService {
         "lexer" -> Seq(lexer)
       )).map { response =>
         if (200 == response.status) {
-          response.body
+          response.body.replace("background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;", "")
         } else {
           StringEscapeUtils.escapeHtml4(source).replace("\n", "<br>")
         }

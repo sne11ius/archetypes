@@ -2,7 +2,7 @@
 @import models.PaginationInfo
 @import views.forms.search.ArchetypeSearch._
 
-@()
+@(manifestInfo: ManifestInfo)
 
 @main("wasis.nu/mit/archetypes?") {
 <div class="container-fluid">
@@ -11,7 +11,7 @@
       <h2 style="margin-top: 0">Contact</h2>
       <p>
         <a href="mailto:cornelius@@wasis.nu">cornelius@@wasis.nu</a><br>
-        <a href="https://plus.google.com/+CorneliusLilge">Google Plus</a><br>
+        <a href="https://plus.google.com/+CorneliusLilge">+CorneliusLilge</a><br>
         <a href="https://twitter.com/snellius">@@snellius</a><br>
         <a href="https://www.facebook.com/sne11ius">Facebook</a>
       </p>
@@ -21,6 +21,7 @@
     </div>
     <div class="col-xs-12 col-md-9">
       <div class="well">
+        <h3>Why?</h3>
         <p>
           Maven<sup>1</sup> archetypes are horrible to use.
           <ul>
@@ -33,9 +34,10 @@
         <p class="small">
           <sup>1</sup>... if you have no idea what this is all about, this page is probably not for you.
         </p>
-        <p class="small">
+        <p class="">
           Powered by <a href="https://github.com/sne11ius/archetypes">github.com/sne11ius/archetypes</a>
         </p>
+        <div style="position: relative; top: -20px;" class="pull-right">Build: <a href="https://github.com/sne11ius/archetypes/tree/@manifestInfo.gitBuildHeadRevision">@manifestInfo.gitBuildHeadRevision</a> @@ @manifestInfo.gitBuildDate</div>
       </div>
     </div>
   </div>

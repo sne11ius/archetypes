@@ -2,23 +2,24 @@
 
 @(paginationInfo: PaginationInfo, searchData: SearchData)
 
-<div class="paginator">
-  @if(0 != paginationInfo.start) {
-    <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start - paginationInfo.numItems}&numItems=@paginationInfo.numItems">&lt;</a>
-  }
-  <span class="pages">
+<nav>
+  <ul class="pagination shadow-z-1">
+   @if(0 != paginationInfo.start) {
+      <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start - paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Previous">&laquo;</a></li>
+	  } else {
+	    <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+	  }
     @for(currentIndex <- 0 until paginationInfo.numPages) {
       @if(currentIndex * paginationInfo.numItems == paginationInfo.start) {
-        <span class="current">@(currentIndex + 1)</span>
+        <li class="active"><a href="#">@(currentIndex + 1)<span class="sr-only">(current)</span></a></li>
       } else {
-        <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{currentIndex * paginationInfo.numItems}&numItems=@paginationInfo.numItems">@(currentIndex + 1)</a>
-      }
-      @if(currentIndex+1 < paginationInfo.numPages) {
-        |
+      <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{currentIndex * paginationInfo.numItems}&numItems=@paginationInfo.numItems">@(currentIndex + 1)</a></li>
       }
     }
-  </span>
-  @if(paginationInfo.numPages != paginationInfo.start) {
-    <a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start + paginationInfo.numItems}&numItems=@paginationInfo.numItems">&gt;</a>
-  }
-</div>
+	  @if(paginationInfo.numPages != paginationInfo.start) {
+	    <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start + paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Next">&raquo;</a></li>
+	  } else {
+      <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+    }
+  </ul>
+</nav>
