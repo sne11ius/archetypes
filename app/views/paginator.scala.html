@@ -3,7 +3,7 @@
 @(paginationInfo: PaginationInfo, searchData: SearchData)
 
 <nav>
-  <ul class="pagination shadow-z-1">
+  <ul class="pagination">
    @if(0 != paginationInfo.start) {
       <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start - paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Previous">&laquo;</a></li>
 	  } else {
