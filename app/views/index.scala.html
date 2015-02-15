@@ -40,43 +40,22 @@
           <col width="30%">
           <col width="50%">
           <col width="5%">
-              <tr>
-                <!-- th>#</th-->
-                <th class="details"></th>
-                <th class="groupId">groupId</th>
-                <th class="artifactId">artifactId</th>
-                <th class="description">description</th>
-                <th class="javaVersion">javaVersion</th>
-              </tr>
-              @for((archetype, index) <- archetypes.zipWithIndex) {
-                <tr data-href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">
-                  <!-- td>@{1 + index}</td-->
-                  <td class="details"><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">details</a></td>
-                  <td class="groupId">@archetype.groupId</td>
-                  <td class="artifactId">@archetype.artifactId</td>
-                  <td class="description">@archetype.description</td>
-                  <td class="javaVersion">@archetype.javaVersion</td>
-                </tr>
-              }
-            </table>
-            <h2>Archetypes with additional properties (@{archetypes.filter(a => !a.additionalProps.isEmpty).size} items)</h2>
-            <table>
-          <col width="10%">
-          <col width="30%">
-          <col width="30%">
-          <col width="30%">
           <tr>
-            <th class="details">details</th>
+            <!-- th>#</th-->
+            <th class="details"></th>
             <th class="groupId">groupId</th>
             <th class="artifactId">artifactId</th>
-            <th class="version">version</th>
+            <th class="description">description</th>
+            <th class="javaVersion">javaVersion</th>
           </tr>
-          @for(archetype <- archetypes.filter(a => !a.additionalProps.isEmpty)) {
-            <tr>
+          @for((archetype, index) <- archetypes.zipWithIndex) {
+            <tr data-href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">
+              <!-- td>@{1 + index}</td-->
               <td class="details"><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, Some("/pom.xml"))">details</a></td>
               <td class="groupId">@archetype.groupId</td>
               <td class="artifactId">@archetype.artifactId</td>
-              <td class="version">@archetype.version</td>
+              <td class="description">@archetype.description</td>
+              <td class="javaVersion">@archetype.javaVersion</td>
             </tr>
           }
         </table>
