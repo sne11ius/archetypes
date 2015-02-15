@@ -6,9 +6,9 @@
   <ul class="pagination">
    @if(0 != paginationInfo.start) {
       <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start - paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Previous">&laquo;</a></li>
-	  } else {
-	    <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
-	  }
+      } else {
+        <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+      }
     @for(currentIndex <- 0 until paginationInfo.numPages) {
       @if(currentIndex * paginationInfo.numItems == paginationInfo.start) {
         <li class="active"><a href="#">@(currentIndex + 1)<span class="sr-only">(current)</span></a></li>
@@ -16,9 +16,9 @@
       <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{currentIndex * paginationInfo.numItems}&numItems=@paginationInfo.numItems">@(currentIndex + 1)</a></li>
       }
     }
-	  @if(paginationInfo.numPages != paginationInfo.start) {
-	    <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start + paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Next">&raquo;</a></li>
-	  } else {
+      @if(paginationInfo.numPages != paginationInfo.start) {
+        <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&start=@{paginationInfo.start + paginationInfo.numItems}&numItems=@paginationInfo.numItems" aria-label="Next">&raquo;</a></li>
+      } else {
       <li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
     }
   </ul>

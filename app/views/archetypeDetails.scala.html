@@ -7,13 +7,13 @@
 <div class="navbar navbar-default">
   <ul class="nav navbar-nav go-back">
     <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
-	</ul>
+  </ul>
 </div>
 <div class="container-fluid">
   <div class="row">
     <div class="col-xs-6 col-md-5 well well-small">
-	    <h4>Archetype details</h4>
-	    <table class="archetype-details">
+      <h4>Archetype details</h4>
+      <table class="archetype-details">
         <tr>
           <td class="prop-name">Group Id:</td>
           <td class="value">@archetype.groupId</td>
@@ -38,11 +38,11 @@
           <td class="prop-name">Packaging:</td>
           <td class="value">@archetype.packaging</td>
         </tr>
-	    </table>
+      </table>
     </div>
     <div class="col-xs-12 col-md-7">
       <div class="well well-small command">
-	      <h4>Command</h4>
+        <h4>Command</h4>
         <code>
           mvn archetype:generate -DgroupId=com.example.app -DartifactId=example-app -Dversion=1.0-SNAPSHOT -Dpackage=com.example.app -DinteractiveMode=false -DarchetypeGroupId=@archetype.groupId -DarchetypeArtifactId=@archetype.artifactId -DarchetypeVersionId=@archetype.version
           @for(prop <- archetype.additionalProps) {
@@ -57,41 +57,41 @@
   </div>
   <div class="row">
     @if(archetype.localDir.isDefined) {
-	    <div class="col-xs-6 col-md-4 well well-small no-padding">
-		    <div id="file-browser">
-		      @Html(fileTree.getOrElse("[no file browser available]"))
-		    </div>
-	    </div>
-	    <div class="col-xs-12 col-md-8 well well-small file-content no-padding">
-	      @file match {
-		      case Some(descriptor) => {
-		        @descriptor match {
-		          case Empty => {
-		            [This file is empty]
-		          }
-		          case Text(text) => {
-		            @Html(text)
-		          }
-		          case Markdown(html) => {
-		            @Html(html)
-		          }
-		          case Image(src) => {
-		            <img src="@src">
-		          }
-		          case Binary(href) => {
-		            This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
-		          }
-		        }
-		      }
-		      case None => {
-		        [no file content available]
-		      }
-		    }
-	    </div>
+      <div class="col-xs-6 col-md-4 well well-small no-padding">
+        <div id="file-browser">
+          @Html(fileTree.getOrElse("[no file browser available]"))
+        </div>
+      </div>
+      <div class="col-xs-12 col-md-8 well well-small file-content no-padding">
+        @file match {
+            case Some(descriptor) => {
+              @descriptor match {
+                case Empty => {
+                  [This file is empty]
+                }
+                case Text(text) => {
+                  @Html(text)
+                }
+                case Markdown(html) => {
+                  @Html(html)
+                }
+                case Image(src) => {
+                  <img src="@src">
+                }
+                case Binary(href) => {
+                  This seems to be a binary file. Click <a href="@href" target="_blank">here</a> to download.
+                }
+              }
+            }
+            case None => {
+              [no file content available]
+            }
+          }
+      </div>
     } else {
       <div class="col-xs-6 col-md-12 well well-small">
-	      Archetype details could not be loaded. Here is why:
-	      <pre>@archetype.generateLog</pre>
+        Archetype details could not be loaded. Here is why:
+        <pre>@archetype.generateLog</pre>
       </div>
      }
   </div>
