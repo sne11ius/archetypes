@@ -1,19 +1,12 @@
 @import views.forms.search.ArchetypeSearch._
 @import java.util.Locale
 
-@(archetype: Archetype, searchData: Option[SearchData], fileTree: Option[String], file: Option[FileDescriptor])
+@(archetype: Archetype, searchData: SearchData, fileTree: Option[String], file: Option[FileDescriptor], filename: Option[String])
 
 @main("wasis.nu/mit/archetypes?") {
 <div class="navbar navbar-default">
-	<ul class="nav navbar-nav go-back">
-	  @searchData match {
-	    case None => {
-	      <li><a href="@routes.Application.index"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
-	    }
-	    case Some(searchData) => {
-	      <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
-	    }
-	  }
+  <ul class="nav navbar-nav go-back">
+    <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>
 	</ul>
 </div>
 <div class="container-fluid">
@@ -56,10 +49,8 @@
             -D@prop=My@{prop.take(1).toUpperCase(Locale.ENGLISH) + prop.drop(1)}
           }
         </code>
-        <div class="" style="margin-top: 30px;">
-	        <form action="@routes.ArchetypesController.archetypeGenerate(archetype.groupId, archetype.artifactId, archetype.version)">
-	          <span style="margin-right: 50px;">Create project from this archetype</span><button type="submit" class="btn btn-primary btn-fab btn-raised"><i class="mdi-navigation-arrow-forward"></i></button>
-	        </form>
+        <div class="generate-link" style="margin-top: 30px;">
+          <span style="margin-right: 50px;">Create project from this archetype</span><a href="@routes.ArchetypesController.archetypeGenerate(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, filename)" class="btn btn-primary btn-fab btn-raised"><i class="mdi-navigation-arrow-forward"></i></a>
         </div>
       </div>
     </div>

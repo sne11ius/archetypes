@@ -35,7 +35,7 @@ import org.joda.time.DateTime
 class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
   
   def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
-    val searchData = Some(SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion))
+    val searchData = SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion)
     val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None);
     if (1 <= archetypes.size) {
       val loadedArchetype = archetypes.head
@@ -64,7 +64,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         } else {
           None
         }
-      Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file))
+      Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file, filename))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
@@ -109,7 +109,8 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     descriptor
   }
   
-  def archetypeGenerate(groupId: String, artifactId: String, version: String) = DBAction { implicit rs =>
+  def archetypeGenerate(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
+    val searchData = SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion)
     var archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
     if (1 <= archetypes.size) {
       val archetype = archetypes.head
@@ -125,7 +126,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       rs.body.asFormUrlEncoded match {
         case None => {
           Logger.debug("No form data D:")
-          Ok(views.html.archetypeGenerate(archetype, props.toMap))
+          Ok(views.html.archetypeGenerate(archetype, props.toMap, searchData, filename))
         }
         case Some(map) => {
           val yourGroupId = map.get("groupId").get.head
