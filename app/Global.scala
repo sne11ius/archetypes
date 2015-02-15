@@ -21,10 +21,12 @@ import org.apache.maven.artifact.versioning.ComparableVersion
 import scala.language.implicitConversions
 import org.jsoup.Jsoup
 import org.joda.time.DateTime
+import org.joda.time.Interval
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormatterBuilder
 import java.util.Locale
 import java.io.PrintWriter
+import scala.concurrent.duration._
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -37,6 +39,17 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateJavaVersions }
+    //Akka.system.scheduler.scheduleOnce(1 second) { showNewArchetypes }
+    //Akka.system.scheduler.scheduleOnce(1 second) { showInitialArchetypes }
+    Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
+    Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
+  }
+  
+  private def timeTillMidnight : FiniteDuration = {
+    val now      = new DateTime
+    val midnight = now.toLocalDate.plusDays(1).toDateTimeAtStartOfDay(now.getZone)
+    val millisToMidnight = new Interval(now, midnight).toDurationMillis
+    new FiniteDuration(millisToMidnight, MILLISECONDS)
   }
     
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
@@ -59,37 +72,66 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
   }
   
-  def updateLastModified = {
-    Logger.debug("Updating lastModified...")
-    val allArchetypes = archetypesService.findAll
-    allArchetypes.zipWithIndex.foreach { e =>
-      val archetype = e._1
-      val index = e._2
-      if (0 != archetype.lastUpdated.getMillis) {
-        Logger.debug(s"$index/${ allArchetypes.length } -> Skipping")
-      } else {
-        Logger.debug(s"$index/${ allArchetypes.length } -> Updating")
-        val url = s"https://repo1.maven.org/maven2/${archetype.groupId.replace(".", "/")}/${archetype.artifactId}/${archetype.version}/"
-        val doc = Jsoup.connect(url).get();
-        val text = doc.select("pre").text
-        val matcher = "((([0-9])|([0-2][0-9])|([3][0-1]))\\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\-\\d{4} \\d{2}:\\d{2})"r
-        val dateString = matcher.findFirstIn(text).get
-        val formatter = new DateTimeFormatterBuilder()
-          .appendDayOfMonth(2)
-          .appendLiteral("-")
-          .appendMonthOfYearShortText()
-          .appendLiteral("-")
-          .appendYear(4, 4)
-          .appendLiteral(" ")
-          .appendHourOfDay(2)
-          .appendLiteral(":")
-          .appendMinuteOfHour(2)
-          .toFormatter().withLocale(Locale.ENGLISH)//"dd-mmm-yyyy hh:mm"
-        val date = DateTime.parse(dateString, formatter)
-        val newArchetype = archetype.copy(lastUpdated = date)
-        archetypesService.safe(newArchetype)
-      }
+  def addNewArchetypes = {
+    Logger.debug("New releases")
+    Logger.debug("Loading from maven central...")
+    val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
+    Logger.debug("...done")
+    Logger.debug("Filtering...")
+    val unknown = allArchetypes.filter { a =>
+      archetypesService.findBy(a).isEmpty
     }
+    Logger.debug("...done")
+    Logger.debug(s"New archetypes:\n$unknown")
+    Logger.debug(s"# new archetypes: ${unknown.size}")
+    if (0 < unknown.size) {
+      Logger.debug("Adding new Archetypes...")
+      val total = unknown.size
+      unknown.zipWithIndex.map { case (a, index) =>
+        Logger.debug(s"(${index + 1} / $total)")
+        archetypesService.safe(a)
+        val loadedArchetype = archetypesService.loadArchetypeContent(a)
+        if (loadedArchetype.localDir.isEmpty) {
+          Logger.debug(s"Cannot load $loadedArchetype")
+        } else {
+          archetypesService.safe(loadedArchetype)
+        }
+      }
+    } else {
+      Logger.debug("Nothing new...")
+    }
+    Logger.debug("...done")
+  }
+  
+  def showNewArchetypes = {
+    Logger.debug("New releases")
+    Logger.debug("Loading from maven central...")
+    val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
+    Logger.debug("...done")
+    Logger.debug("Filtering...")
+    val unknown = allArchetypes.filter { a =>
+      archetypesService.findBy(a).isEmpty
+    }
+    Logger.debug("...done")
+    Logger.debug(s"New archetypes:\n$unknown")
+    Logger.debug(s"# new archetypes: ${unknown.size}")
+  }
+  
+  def showInitialArchetypes = {
+    Logger.debug("Initial releases")
+    Logger.debug("Loading from maven central...")
+    val newArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
+    Logger.debug("...done")
+    val knownArchetypes = archetypesService.findAll
+    Logger.debug("Filtering...")
+    val unknown = newArchetypes.filter { a =>
+      knownArchetypes.filter { x =>
+        x.groupId == a.groupId && x.artifactId == a.artifactId
+      }.isEmpty
+    }
+    Logger.debug("...done")
+    Logger.debug(s"New archetypes:\n$unknown")
+    Logger.debug(s"# new archetypes: ${unknown.size}")
   }
   
   def updateArchetypes = {
@@ -139,58 +181,6 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     }
   }
   
-  def updateJavaVersions = {
-    Logger.debug("Updating java versions...")
-    val allArchetypes = archetypesService.findAll
-    allArchetypes.zipWithIndex.foreach { e =>
-      val archetype = e._1
-      val index = e._2
-      if ("[default]" != archetype.javaVersion.getOrElse("[default]") || archetype.localDir.isEmpty) {
-      } else {
-        val javaVersion = extractJavaVersion(archetype.localDir.get)
-        if (javaVersion != archetype.javaVersion.get) {
-          Logger.debug(s"Updated: ${archetype.javaVersion} -> $javaVersion for ${archetype.groupId} / ${archetype.artifactId} / ${archetype.version}")
-          archetypesService.safe(archetype.copy(javaVersion = Some(javaVersion)))
-        }
-      }
-    }
-    Logger.debug("...done")
-  }
-  
-  private def extractJavaVersion(baseDir: String): String = {
-    val file = new File(new File(baseDir, "example-app"), "pom.xml")
-    try {
-      val xml = XML.loadFile(file)
-      var javaVersion = ((xml \ "build" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
-      if (javaVersion.contains("$")) {
-        val property = javaVersion.drop(2).dropRight(1)
-        javaVersion = ((xml \ "properties" \ property) text)
-      }
-      if ("" == javaVersion) {
-        javaVersion = ((xml \ "build" \ "pluginManagement" \ "plugins" \ "plugin" \ "configuration" \ "source") text)
-      }
-      if (javaVersion.contains("$")) {
-        val property = javaVersion.drop(2).dropRight(1)
-        javaVersion = ((xml \ "properties" \ property) text)
-      }
-      if ("" == javaVersion) {
-        javaVersion = ((xml \ "properties" \ "maven.compiler.source") text)
-      }
-      if ("" == javaVersion) {
-        javaVersion = ((xml \ "properties" \ "java.version") text)
-      }
-      if ("" == javaVersion) {
-        "[default]"
-      } else {
-        javaVersion
-      }
-    } catch {
-      case e: Exception => {
-        Logger.error(s"Cannot parse $file: ${e getMessage}")
-        "[default]"
-      }
-    }
-  }
 }
 
 /**
