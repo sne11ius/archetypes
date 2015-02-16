@@ -27,6 +27,7 @@ import org.joda.time.format.DateTimeFormatterBuilder
 import java.util.Locale
 import java.io.PrintWriter
 import scala.concurrent.duration._
+import services.GithubService
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -43,7 +44,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     //Akka.system.scheduler.scheduleOnce(1 second) { showInitialArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateNewestArchetypes }
-    Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
+    //Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
   }
   
   private def timeTillMidnight : FiniteDuration = {
@@ -87,7 +88,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     }
   }
   
-  def addNewArchetypes = {
+  def addNewArchetypes() = {
     Logger.debug("New releases")
     Logger.debug("Loading from maven central...")
     val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
@@ -118,7 +119,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug("...done")
   }
   
-  def showNewArchetypes = {
+  def showNewArchetypes() = {
     Logger.debug("New releases")
     Logger.debug("Loading from maven central...")
     val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
@@ -132,7 +133,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug(s"# new archetypes: ${unknown.size}")
   }
   
-  def showInitialArchetypes = {
+  def showInitialArchetypes() = {
     Logger.debug("Initial releases")
     Logger.debug("Loading from maven central...")
     val newArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
@@ -149,7 +150,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug(s"# new archetypes: ${unknown.size}")
   }
   
-  def updateArchetypes = {
+  def updateArchetypes() = {
     var maxCycles = 0
     val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
     var but = 0

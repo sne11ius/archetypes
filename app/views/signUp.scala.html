@@ -1,0 +1,31 @@
+@import com.mohiva.play.silhouette.core.providers._
+
+@(user: Option[User])(implicit env: com.mohiva.play.silhouette.core.Environment[User, _], request: RequestHeader)
+
+@main("wasis.nu/mit/archetypes?", user) {
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-6 col-md-3 well">
+        <h2 style="margin-top: 0">Sign up</h2>
+      </div>
+      <div class="col-xs-12 col-md-9">
+        <div class="well">
+          <h3>Please select a provider</h3>
+          @defining(env.providers.values.filter(_.isInstanceOf[SocialProvider[_]])) { providers =>
+            @if(!providers.isEmpty) {
+              <div class="">
+                <div>
+                @for(p <- providers) {
+                  <a class="btn btn-fab btn-raised btn-sm btn-success" href="@routes.SocialAuthController.authenticate(p.id)">
+                    <i class="fa fa-@p.id"></i><div class="ripple-wrapper"></div>
+                  </a>
+                }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

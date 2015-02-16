@@ -31,10 +31,40 @@ import org.pegdown.Extensions.ALL
 import org.apache.commons.io.IOUtils
 import java.io.FileInputStream
 import org.joda.time.DateTime
+import com.mohiva.play.silhouette.core.Environment
+import models.User
+import com.mohiva.play.silhouette.contrib.services.CachedCookieAuthenticator
+import com.mohiva.play.silhouette.core.Silhouette
+import com.mohiva.play.silhouette.core.services.AuthInfoService
+import com.mohiva.play.silhouette.core.services.AuthInfo
+import com.mohiva.play.silhouette.core.providers.OAuth2Info
+import scala.util.Success
+import scala.util.Failure
+import services.GithubService
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
 
-class ArchetypesController @Inject() (archetypesService: ArchetypesService, sourcePrettifyService: SourcePrettifyService) extends Controller {
+class ArchetypesController @Inject() (
+    archetypesService: ArchetypesService,
+    sourcePrettifyService: SourcePrettifyService,
+    authInfoService: AuthInfoService,
+    githubService: GithubService,
+    implicit val env: Environment[User, CachedCookieAuthenticator]
+  ) extends Controller with Silhouette[User, CachedCookieAuthenticator] {
   
-  def archetypeDetails(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
+  def archetypeDetails(
+      groupId: String,
+      artifactId: String,
+      version: String,
+      searchGroupId: Option[String],
+      searchArtifactId: Option[String],
+      searchVersion: Option[String],
+      searchDescription: Option[String],
+      searchJavaVersion: Option[String],
+      filename: Option[String]
+    ) = UserAwareAction { implicit request =>
     val searchData = SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion)
     val archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None);
     if (1 <= archetypes.size) {
@@ -64,7 +94,7 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
         } else {
           None
         }
-      Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file, filename))
+      Ok(views.html.archetypeDetails(loadedArchetype, searchData, fileTree, file, filename, request.identity))
     } else {
       Logger.error(s"Cannot find $groupId > $artifactId > $version")
       NotFound
@@ -109,7 +139,17 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
     descriptor
   }
   
-  def archetypeGenerate(groupId: String, artifactId: String, version: String, searchGroupId: Option[String], searchArtifactId: Option[String], searchVersion: Option[String], searchDescription: Option[String], searchJavaVersion: Option[String], filename: Option[String]) = DBAction { implicit rs =>
+  def archetypeGenerate(
+      groupId: String,
+      artifactId: String,
+      version: String,
+      searchGroupId: Option[String],
+      searchArtifactId: Option[String],
+      searchVersion: Option[String],
+      searchDescription: Option[String],
+      searchJavaVersion: Option[String],
+      filename: Option[String]
+    ) = UserAwareAction { implicit request =>
     val searchData = SearchData(searchGroupId, searchArtifactId, searchVersion, searchDescription, searchJavaVersion)
     var archetypes = archetypesService.find(Some(groupId), Some(artifactId), Some(version), None, None)
     if (1 <= archetypes.size) {
@@ -123,17 +163,28 @@ class ArchetypesController @Inject() (archetypesService: ArchetypesService, sour
       archetype.additionalProps.map { s =>
         props += (s -> s"My$s") 
       }
-      rs.body.asFormUrlEncoded match {
+      request.body.asFormUrlEncoded match {
         case None => {
           Logger.debug("No form data D:")
-          Ok(views.html.archetypeGenerate(archetype, props.toMap, searchData, filename))
+          Ok(views.html.archetypeGenerate(archetype, props.toMap, searchData, filename, request.identity))
         }
         case Some(map) => {
+          Logger.debug(s"$map")
           val yourGroupId = map.get("groupId").get.head
           val yourArtifactId = map.get("artifactId").get.head
           val yourVersion = map.get("version").get.head
           val bytes = archetypesService.generate(archetype, map.map(e => (e._1, e._2.head)))
-          Ok(bytes).withHeaders(CONTENT_DISPOSITION -> s"attachment; filename=${yourGroupId}.${yourArtifactId}.${yourVersion}.zip")
+          if (map.contains("github")) {
+            val user = request.identity.get
+            val loginInfo = user.loginInfo
+            val authInfo = Await.result(authInfoService.retrieve[OAuth2Info](loginInfo), 10 seconds)
+            val token = authInfo.get.accessToken
+            val repoLink = githubService.createRepo(yourArtifactId, bytes, archetype, token)
+            Logger.debug(s"Link: $repoLink")
+            Ok(views.html.githubReady(archetype, repoLink, searchData, filename, request.identity))
+          } else {
+            Ok(bytes).withHeaders(CONTENT_DISPOSITION -> s"attachment; filename=${yourGroupId}.${yourArtifactId}.${yourVersion}.zip")
+          }
         }
       }
     } else {

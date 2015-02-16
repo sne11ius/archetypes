@@ -2,9 +2,9 @@
 @import models.PaginationInfo
 @import views.forms.search.ArchetypeSearch._
 
-@(manifestInfo: ManifestInfo, searchForm: Form[SearchData], archetypes: List[Archetype], paginationInfo: Option[PaginationInfo] = None, searchData: SearchData, itemsTotal: Int)
+@(manifestInfo: ManifestInfo, searchForm: Form[SearchData], archetypes: List[Archetype], paginationInfo: Option[PaginationInfo] = None, searchData: SearchData, itemsTotal: Int, user: Option[User])
 
-@main("wasis.nu/mit/archetypes?") {
+@main("wasis.nu/mit/archetypes?", user) {
   <div class="container-fluid">
     <div class="row">
       <div class="col-xs-6 col-md-3 well well-small" id="search-form">

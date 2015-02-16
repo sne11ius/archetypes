@@ -1,9 +1,9 @@
 @import views.forms.search.ArchetypeSearch._
 @import utils.Let._
 
-@(archetype: Archetype, properties: Map[String, String], searchData: SearchData, detailsFile: Option[String])
+@(archetype: Archetype, properties: Map[String, String], searchData: SearchData, detailsFile: Option[String], user: Option[User])
 
-@main("wasis.nu/mit/archetypes?") {
+@main("wasis.nu/mit/archetypes?", user) {
   <div class="navbar navbar-default">
     <ul class="nav navbar-nav go-back">
       <li><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, detailsFile)"><i class="mdi-navigation-arrow-back"></i>Back to archetype</a></li>
@@ -44,7 +44,7 @@
         <div class="well well-small">
           <h4>mvn:generate</h4>
           <form method="post" class="generate-form">
-            <input type="text" class="form-control floating-label" placeholder="groupId"    name="groupId"    value="@{properties.get("groupId").get}">
+            <input type="text" class="form-control floating-label" placeholder="groupId"      name="groupId"    value="@{properties.get("groupId").get}">
               <input type="text" class="form-control floating-label" placeholder="artifactId" name="artifactId" value="@{properties.get("artifactId").get}">
               <input type="text" class="form-control floating-label" placeholder="version"    name="version"    value="@{properties.get("version").get}">
               @let(
@@ -55,10 +55,15 @@
                 -= "version"
               ) { map =>
                 @for((key, value) <- map) {
-              <input type="text" class="form-control floating-label" placeholder="Your @key" name="@key" value="@value">
+                  <input type="text" class="form-control floating-label" placeholder="Your @key" name="@key" value="@value">
                 }
               }
-              <button type="submit" title="Generate already!" class="btn btn-fab btn-raised btn-sm btn-success"><i class="mdi-navigation-check"></i><div class="ripple-wrapper"></div></button>
+              <button type="submit" title="Generate and download zip" class="btn btn-fab btn-raised btn-sm btn-success"><i class="mdi-file-file-download"></i><div class="ripple-wrapper"></div></button>
+              @if(user.isDefined) {
+                <button type="submit" name="github" title="Generate and create new github repo" class="btn btn-fab btn-raised btn-sm btn-success"><i class="fa fa-github"></i><div class="ripple-wrapper"></div></button>
+              } else {
+                <a style="margin-left: 20px; margin-top: 25px;" href="@routes.SignUpController.signUp" title="Login to generate directly to github" class="btn btn-raised btn-sm btn-success"><i style="margin-right: 20px; font-size: 30px;" class="fa fa-github"></i><span style="position: relative; top: -5px; font-size: 13px;">Login to generate directly to github</span><div class="ripple-wrapper"></div></a>
+              }
           </form>
         </div>
       </div>

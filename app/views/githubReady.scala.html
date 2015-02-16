@@ -1,0 +1,56 @@
+@import views.forms.search.ArchetypeSearch._
+@import utils.Let._
+
+@(archetype: Archetype, repolink: Option[String], searchData: SearchData, detailsFile: Option[String], user: Option[User])
+
+@main("wasis.nu/mit/archetypes?", user) {
+  <div class="navbar navbar-default">
+    <ul class="nav navbar-nav go-back">
+      <li><a href="@routes.ArchetypesController.archetypeDetails(archetype.groupId, archetype.artifactId, archetype.version, searchData.groupId, searchData.artifactId, searchData.version, searchData.description, searchData.javaVersion, detailsFile)"><i class="mdi-navigation-arrow-back"></i>Back to archetype</a></li>
+    </ul>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-6 col-md-5 well well-small">
+        <h4>Archetype details</h4>
+        <table class="archetype-details">
+          <tr>
+            <td class="prop-name">Group Id:</td>
+            <td class="value">@archetype.groupId</td>
+          </tr>
+          <tr>
+            <td class="prop-name">Artifact Id:</td>
+            <td class="value">@archetype.artifactId</td>
+          </tr>
+          <tr>
+            <td class="prop-name">Version:</td>
+            <td class="value">@archetype.version</td>
+          </tr>
+          <tr>
+            <td class="prop-name">Description:</td>
+            <td class="value">@archetype.description</td>
+          </tr>
+          <tr>
+            <td class="prop-name">Java Version:</td>
+            <td class="value">@archetype.javaVersion</td>
+          </tr>
+          <tr>
+            <td class="prop-name">Packaging:</td>
+            <td class="value">@archetype.packaging</td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-xs-12 col-md-7">
+        <div class="well well-small">
+          <h4>mvn:generated</h4>
+          @if(repolink.isDefined) {
+            <div>Your new repo is ready.</div>
+            <a href="@repolink" class="btn btn-primary">Rad. Take me there!</a>
+          } else {
+            Sorry, this did not work D:
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

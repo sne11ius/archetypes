@@ -8,9 +8,7 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.1"
-
-scalacOptions += "-feature"
+scalaVersion := "2.11.4"
 
 resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
@@ -32,7 +30,23 @@ libraryDependencies ++= Seq(
   "org.webjars" % "jquery" % "1.10.2-1",
   "org.webjars" % "bootstrap" % "3.3.2",
   "org.webjars" % "bootstrap-material-design" % "0.2.1",
+  "org.webjars" % "font-awesome" % "4.3.0-1",
+  "org.kohsuke" % "github-api" % "1.61",
+  "com.mohiva" %% "play-silhouette" % "1.0",
   cache,
   ws,
   filters
+)
+
+scalacOptions ++= Seq(
+  "-deprecation",            // Emit warning and location for usages of deprecated APIs.
+  "-feature",                // Emit warning and location for usages of features that should be imported explicitly.
+  "-unchecked",              // Enable additional warnings where generated code depends on assumptions.
+  "-Xfatal-warnings",        // Fail the compilation if there are any warnings.
+  "-Xlint",                  // Enable recommended additional warnings.
+  "-Ywarn-adapted-args",     // Warn if an argument list is modified to match the receiver.
+  "-Ywarn-dead-code",        // Warn when dead code is identified.
+  "-Ywarn-inaccessible",     // Warn about inaccessible types in method signatures.
+  "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+  "-Ywarn-numeric-widen"     // Warn when numerics are widened.
 )

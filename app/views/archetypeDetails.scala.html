@@ -1,9 +1,11 @@
 @import views.forms.search.ArchetypeSearch._
 @import java.util.Locale
 
-@(archetype: Archetype, searchData: SearchData, fileTree: Option[String], file: Option[FileDescriptor], filename: Option[String])
+@import models.User
 
-@main("wasis.nu/mit/archetypes?") {
+@(archetype: Archetype, searchData: SearchData, fileTree: Option[String], file: Option[FileDescriptor], filename: Option[String], user: Option[User])
+
+@main("wasis.nu/mit/archetypes?", user) {
 <div class="navbar navbar-default">
   <ul class="nav navbar-nav go-back">
     <li><a href="@{routes.Application.index}?groupId=@searchData.groupId&artifactId=@searchData.artifactId&version=@searchData.version&description=@searchData.description&javaVersion=@searchData.javaVersion"><i class="mdi-navigation-arrow-back"></i>Back to search</a></li>

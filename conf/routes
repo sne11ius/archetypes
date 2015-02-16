@@ -8,5 +8,9 @@ GET    /rest/archetypes                                              @controller
 GET    /rest/archetypes/:groupId/:artifactId/:version/loadMetaData   @controllers.ArchetypesController.loadMetaData(groupId: String, artifactId: String, version: String)
 GET    /rest/archetypes/:groupId/:artifactId/:version/files/*file    @controllers.ArchetypesController.getFile(groupId: String, artifactId: String, version: String, file: String)
 
+GET    /signUp                                                       @controllers.SignUpController.signUp
+GET    /authenticate/logout                                          @controllers.SignUpController.signOut
+GET    /authenticate/:provider                                       @controllers.SocialAuthController.authenticate(provider)
+
 GET    /assets/*file                                                 controllers.Assets.at(path="/public", file)
 GET    /webjars/*file                                                controllers.WebJarAssets.at(file)

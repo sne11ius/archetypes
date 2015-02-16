@@ -1,24 +1,30 @@
 package controllers
 
 import javax.inject.Inject
-
 import com.jcabi.manifests.Manifests
 import models.{ManifestInfo, PaginationInfo}
 import play.api._
-import play.api.data.Forms._
-import play.api.data._
-import play.api.db.slick.DBAction
 import play.api.mvc._
+import play.api.data._
+import play.api.data.Forms._
+import play.api.db.slick.DBAction
 import services.ArchetypesService
 import views.forms.search.ArchetypeSearch._
+import com.mohiva.play.silhouette.core.Environment
+import models.User
+import com.mohiva.play.silhouette.contrib.services.CachedCookieAuthenticator
+import com.mohiva.play.silhouette.core.Silhouette
 
-class Application @Inject() (archetypesService: ArchetypesService) extends Controller {
+class Application @Inject() (
+    archetypesService: ArchetypesService,
+    implicit val env: Environment[User, CachedCookieAuthenticator]
+  ) extends Controller with Silhouette[User, CachedCookieAuthenticator] {
 
   def untrail(path: String) = Action {
     Redirect("/" + path)
   }
   
-  def about() = Action { implicit rs =>
+  def about() = UserAwareAction { implicit request =>
     var manifestInfo = ManifestInfo("branch", "date", "rev")
     try {
       manifestInfo = ManifestInfo(
@@ -29,10 +35,10 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
     } catch {
       case e: Exception => {}
     }
-    Ok(views.html.about(manifestInfo))
+    Ok(views.html.about(manifestInfo, request.identity))
   }
   
-  def index() = DBAction { implicit rs =>
+  def index() = UserAwareAction { implicit request =>
     var manifestInfo = ManifestInfo("branch", "date", "rev")
     try {
       manifestInfo = ManifestInfo(
@@ -46,16 +52,16 @@ class Application @Inject() (archetypesService: ArchetypesService) extends Contr
     archetypeSearchForm.bindFromRequest.fold(
       formWithErrors => {
         val searchData = SearchData(None, None, None, None, None)
-        BadRequest(views.html.index(manifestInfo, formWithErrors, List(), None, searchData, 0))
+        BadRequest(views.html.index(manifestInfo, formWithErrors, List(), None, searchData, 0, request.identity))
       },
       searchData => {
         val start = Form("start" -> text).bindFromRequest.fold( hasErrors => { 0 }, value => { value.toInt } )
         val numItems = Form("numItems" -> text).bindFromRequest.fold( hasErrors => { 200 }, value => { value.toInt } )
         val archetypes = archetypesService.find(searchData.groupId, searchData.artifactId, Some(searchData.version.getOrElse("newest")), searchData.description, searchData.javaVersion)
         val numArchetypes = archetypes.length
-        val numPages = ((numArchetypes:Float) / numItems).ceil.toInt
+        val numPages = ((numArchetypes.toFloat) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)
-        Ok(views.html.index(manifestInfo, archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes))
+        Ok(views.html.index(manifestInfo, archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes, request.identity))
       }
     )
   }

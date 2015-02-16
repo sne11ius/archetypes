@@ -271,3 +271,7 @@ li.file {
   background-color: white;
   border: 1px solid #ddd;
 }
+
+button + button {
+	margin-left: 30px !important;
+}
