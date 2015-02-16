@@ -7,6 +7,17 @@ This is simple search app for maven archetypes.
 
  - Filter by groupId, artifactId, version or description in any combination.
  - View contents for generated example project
+ 
+## Screens
+
+### Archetypes search
+
+![Archetypes search](https://raw.github.com/sne11ius/archetypes/master/screenshot0.png)
+
+### Archetypes details
+
+![Archetypes details](https://raw.github.com/sne11ius/archetypes/master/screenshot1.png)
+
 
 ## How to run
 
