@@ -44,7 +44,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     //Akka.system.scheduler.scheduleOnce(1 second) { showInitialArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateNewestArchetypes }
-    //Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
+    Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
   }
   
   private def timeTillMidnight : FiniteDuration = {
