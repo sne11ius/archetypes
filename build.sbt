@@ -12,6 +12,8 @@ scalaVersion := "2.11.4"
 
 resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "JBoss repository" at "https://repository.jboss.org/nexus/content/repositories/"
+
 libraryDependencies ++= Seq(
   "net.codingwell" %% "scala-guice" % "4.0.0-beta5",
   "com.typesafe.play" %% "play-slick" % "0.8.1",
