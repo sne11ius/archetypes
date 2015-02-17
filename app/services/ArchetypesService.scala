@@ -15,4 +15,5 @@ trait ArchetypesService {
   def loadArchetypeContent(archetype: Archetype): Archetype
   def generate(archetype: Archetype, propValues: Map[String, String]): Array[Byte]
   
+  def recent(max: Int): List[Archetype]
 }

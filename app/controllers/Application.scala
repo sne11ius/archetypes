@@ -39,20 +39,11 @@ class Application @Inject() (
   }
   
   def index() = UserAwareAction { implicit request =>
-    var manifestInfo = ManifestInfo("branch", "date", "rev")
-    try {
-      manifestInfo = ManifestInfo(
-        Manifests.read("Git-Branch"),
-        Manifests.read("Git-Build-Date"),
-        Manifests.read("Git-Head-Rev")
-      )
-    } catch {
-      case e: Exception => {}
-    }
+    val recentArchetyps = archetypesService.recent(10)
     archetypeSearchForm.bindFromRequest.fold(
       formWithErrors => {
         val searchData = SearchData(None, None, None, None, None)
-        BadRequest(views.html.index(manifestInfo, formWithErrors, List(), None, searchData, 0, request.identity))
+        BadRequest(views.html.index(recentArchetyps, formWithErrors, List(), None, searchData, 0, request.identity))
       },
       searchData => {
         val start = Form("start" -> text).bindFromRequest.fold( hasErrors => { 0 }, value => { value.toInt } )
@@ -61,7 +52,7 @@ class Application @Inject() (
         val numArchetypes = archetypes.length
         val numPages = ((numArchetypes.toFloat) / numItems).ceil.toInt
         val paginationInfo = PaginationInfo(start, numItems, numPages)
-        Ok(views.html.index(manifestInfo, archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes, request.identity))
+        Ok(views.html.index(recentArchetyps, archetypeSearchForm.fill(searchData), archetypes.drop(start).take(numItems), Some(paginationInfo), searchData, numArchetypes, request.identity))
       }
     )
   }

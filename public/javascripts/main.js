@@ -1,6 +1,6 @@
-$('#archetypes .details').hide();
-$('#archetypes col.details').remove();
-$('#archetypes [data-href]').click(function() {
+$('.archetypes-table .details').hide();
+$('.archetypes-table col.details').remove();
+$('.archetypes-table [data-href]').click(function() {
     window.location.href = $(this).find("a").attr("href");
 });
 

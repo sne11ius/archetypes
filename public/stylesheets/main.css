@@ -51,7 +51,7 @@
   margin-top: 18px;
 }
 
-#archetypes td {
+.archetypes-table td {
   cursor: pointer;
 }
 
@@ -109,9 +109,10 @@ td.prop-name {
 }
 
 .paginator-top {
-  position: absolute;
-  top: -21px;
-  left: 14px;
+	position: relative;
+	top: 0px;
+	left: 0px;
+	float: left;
 }
 
 .pagination > li> a, .pagination > li > span {
@@ -267,9 +268,15 @@ li.file {
 	margin-top: 20px !important;
 }
 
+
+.paginator-top + .pull-right.xxs {
+  position: relative;
+  top: 16px;
+}
+
 .pull-right.xxs {
-  background-color: white;
-  border: 1px solid #ddd;
+	background-color: white;
+	border: 1px solid #ddd;
 }
 
 button + button {

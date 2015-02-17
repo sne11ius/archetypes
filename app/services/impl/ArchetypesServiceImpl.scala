@@ -352,4 +352,13 @@ class ArchetypesServiceImpl @Inject() (archetypesDao: ArchetypeDao) extends Arch
     FileUtils.deleteQuietly(new File(buildBaseDir + ".zip"))
     byteArray
   }
+  
+  override def recent(max: Int): List[Archetype] = {
+    implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isAfter _)
+    findAll.groupBy( a => (a.groupId, a.artifactId)).flatMap {
+      case ((groupId, artifactId), list) => {
+        list.sortWith((a1, a2) => { 0 < a1.compareTo(a2) }).take(1)
+      }
+    }.toList.sortBy(_.lastUpdated).take(max)
+  }
 }
