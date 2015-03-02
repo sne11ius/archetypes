@@ -28,6 +28,7 @@ import java.util.Locale
 import java.io.PrintWriter
 import scala.concurrent.duration._
 import services.GithubService
+import akka.actor.Cancellable
 
 object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter(), XMLCompressorFilter()) {
 
@@ -35,7 +36,10 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
 
   override def getControllerInstance[A](controllerClass: Class[A]): A = injector.getInstance(controllerClass)
   val archetypesService = injector.getInstance(classOf[ArchetypesService])
-  
+
+  var startupUpdateTask: Cancellable = null
+  var dailyUpdateTask: Cancellable = null
+
   override def onStart(app: Application) {
     //Akka.system.scheduler.scheduleOnce(1 second) { updateArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateLastModified }
@@ -44,20 +48,40 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     //Akka.system.scheduler.scheduleOnce(1 second) { showInitialArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
     //Akka.system.scheduler.scheduleOnce(1 second) { updateNewestArchetypes }
-    Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
+    //Akka.system.scheduler.schedule(timeTillMidnight, 1.days) { addNewArchetypes }
+    // Run once at startup
+    startupUpdateTask = Akka.system.scheduler.scheduleOnce(1 second) { addNewArchetypes }
+    // Run every day at 2am
+    dailyUpdateTask = Akka.system.scheduler.schedule(timeTillHour(2), 24 hours) { addNewArchetypes }
   }
-  
-  private def timeTillMidnight : FiniteDuration = {
+
+  override def onStop(app: Application) {
+    tryCancel(startupUpdateTask, "startupUpdateTask")
+    tryCancel(dailyUpdateTask, "dailyUpdateTask")
+  }
+
+  private def tryCancel(task: Cancellable, name: String) {
+    if (null != task && !task.isCancelled) {
+      Logger.debug(s"Stopping $name...")
+      if (task.cancel()) {
+        Logger.debug("... done.")
+      } else {
+        Logger.debug("... could not cancel.")
+      }
+    }
+  }
+
+  private def timeTillHour(hour: Int) : FiniteDuration = {
     val now      = new DateTime
-    val midnight = now.toLocalDate.plusDays(1).toDateTimeAtStartOfDay(now.getZone)
-    val millisToMidnight = new Interval(now, midnight).toDurationMillis
-    new FiniteDuration(millisToMidnight, MILLISECONDS)
+    val hourTime = now.toLocalDate.plusDays(1).toDateTimeAtStartOfDay(now.getZone).plusHours(hour)
+    val millisToHour = new Interval(now, hourTime).toDurationMillis
+    new FiniteDuration(millisToHour, MILLISECONDS)
   }
-    
+
   implicit def archetypeToComparableVersion(a: Archetype): ComparableVersion = new ComparableVersion(a.version)
 
   def newest(all: List[Archetype]): List[Archetype] = newestBut(all, 0)
-  
+
   def newestBut(all: List[Archetype], but: Int): List[Archetype] = {
     all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
       case (_, list) => {
@@ -65,7 +89,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       }
     }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
   }
-  
+
   def initial(all: List[Archetype]): List[Archetype] = {
     all.groupBy( a => (a.groupId, a.artifactId)).flatMap {
       case (_, list) => {
@@ -73,7 +97,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       }
     }.toList.sortBy { a => (a.groupId, a.artifactId, a.version) }
   }
-  
+
   def updateNewestArchetypes = {
     def newestArchetypes = newest(archetypesService.findAll)
     def total = newestArchetypes.size
@@ -87,9 +111,9 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       }
     }
   }
-  
+
   def addNewArchetypes() = {
-    Logger.debug("New releases")
+    Logger.debug("Adding new Archetype releases")
     Logger.debug("Loading from maven central...")
     val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
     Logger.debug("...done")
@@ -109,16 +133,15 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
         val loadedArchetype = archetypesService.loadArchetypeContent(a)
         if (loadedArchetype.localDir.isEmpty) {
           Logger.debug(s"Cannot load $loadedArchetype")
-        } else {
-          archetypesService.safe(loadedArchetype)
         }
+        archetypesService.safe(loadedArchetype)
       }
     } else {
       Logger.debug("Nothing new...")
     }
     Logger.debug("...done")
   }
-  
+
   def showNewArchetypes() = {
     Logger.debug("New releases")
     Logger.debug("Loading from maven central...")
@@ -132,7 +155,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug(s"New archetypes:\n$unknown")
     Logger.debug(s"# new archetypes: ${unknown.size}")
   }
-  
+
   def showInitialArchetypes() = {
     Logger.debug("Initial releases")
     Logger.debug("Loading from maven central...")
@@ -149,12 +172,12 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
     Logger.debug(s"New archetypes:\n$unknown")
     Logger.debug(s"# new archetypes: ${unknown.size}")
   }
-  
+
   def updateArchetypes() = {
     var maxCycles = 0
     val allArchetypes = archetypesService.loadFromAllCatalogs.sortBy { a => (a.groupId, a.artifactId, a.version) }
     var but = 0
-    
+
     Logger.debug("Computing max cycles...")
     var testArchetypes = newestBut(allArchetypes, maxCycles)
     while (!testArchetypes.isEmpty) {
@@ -162,7 +185,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       testArchetypes = newestBut(allArchetypes, maxCycles)
     }
     Logger.debug(s"Max cycles: $maxCycles")
-    
+
     var archetypes = newestBut(allArchetypes, but)
     while (!archetypes.isEmpty) {
       Logger.debug(s"Cycle $but of $maxCycles")
@@ -196,7 +219,7 @@ object Global extends WithFilters(new GzipFilter(), CustomHTMLCompressorFilter()
       archetypes = newestBut(archetypesService.loadFromAllCatalogs, but)
     }
   }
-  
+
 }
 
 /**
