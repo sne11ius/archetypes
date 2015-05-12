@@ -16,6 +16,7 @@ resolvers += "JBoss repository" at "https://repository.jboss.org/nexus/content/r
 
 libraryDependencies ++= Seq(
   "net.codingwell" %% "scala-guice" % "4.0.0-beta5",
+  "com.typesafe.play" %% "play-slick" % "0.8.1",
   "mysql" % "mysql-connector-java" % "5.1.32",
   "org.apache.maven" % "maven-artifact" % "3.2.5",
   "commons-io" % "commons-io" % "2.4",
